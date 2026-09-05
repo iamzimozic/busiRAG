@@ -28,6 +28,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+psycopg://busirag:busirag@localhost:5432/busirag
+      GEMINI_API_KEY: ci-dummy-key
 
     steps:
       - name: Checkout repository
