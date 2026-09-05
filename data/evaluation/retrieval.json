@@ -1,0 +1,242 @@
+[
+  {
+    "id": "apple_net_income_2023",
+    "query": "What was Apple's net income in 2023?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 435
+      }
+    ],
+    "expected_answer": "$96,995 million"
+  },
+  {
+    "id": "apple_cash_2023",
+    "query": "How much cash and cash equivalents did Apple have in 2023?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 437
+      }
+    ],
+    "expected_answer": "$29,965 million"
+  },
+  {
+    "id": "apple_international_trade",
+    "query": "What risks does Apple face from international trade restrictions?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 375
+      }
+    ],
+    "expected_answer": "Risks related to international trade restrictions, including tariffs."
+  },
+  {
+    "id": "apple_marketable_securities",
+    "query": "How much marketable securities did Apple have in 2023?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 462
+      }
+    ],
+    "expected_answer": "$31,590 million"
+  },
+  {
+    "id": "apple_inventory",
+    "query": "What were Apple's inventories in 2023?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 438
+      }
+    ],
+    "expected_answer": "$6,331 million"
+  },
+  {
+    "id": "apple_debt_2024",
+    "query": "How much term debt principal was due in 2024 for Apple?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 480
+      }
+    ],
+    "expected_answer": "$9,943 million"
+  },
+  {
+    "id": "apple_long_lived_assets_china",
+    "query": "How much long-lived assets did Apple have in China?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 490
+      }
+    ],
+    "expected_answer": "$5,778 million"
+  },
+    {
+    "id": "apple_cash_flow_net_income",
+    "query": "What net income amount was reported in Apple's cash flow statement?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 447
+      }
+    ],
+    "expected_answer": "$96,995 million"
+  },
+  {
+    "id": "microsoft_net_income_2023",
+    "query": "What was Microsoft's net income in fiscal 2023?",
+    "relevant_chunks": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "chunk_id": 1518
+      }
+    ],
+    "expected_answer": "$72,361 million"
+  },
+  {
+    "id": "microsoft_net_income_2024",
+    "query": "What was Microsoft's net income in fiscal 2024?",
+    "relevant_chunks": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "chunk_id": 1518
+      }
+    ],
+    "expected_answer": "$88,136 million"
+  },
+    {
+    "id": "microsoft_net_income_2025",
+    "query": "What was Microsoft's net income in fiscal 2025?",
+    "relevant_chunks": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "chunk_id": 1518
+      }
+    ],
+    "expected_answer": "$101,832 million"
+  },
+  {
+    "id": "jpmorgan_net_income_2024",
+    "query": "What was JPMorgan Chase's net income in 2024?",
+    "relevant_chunks": [
+      {
+        "company": "jpmorgan",
+        "year": 2024,
+        "chunk_id": 3221
+      }
+    ],
+    "expected_answer": "$58,471 million"
+  },
+  {
+    "id": "jpmorgan_net_income_2025",
+    "query": "What was JPMorgan Chase's net income in 2025?",
+    "relevant_chunks": [
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "chunk_id": 4175
+      }
+    ],
+    "expected_answer": "$57,048 million"
+  },
+  {
+    "id": "nvidia_net_income_2025",
+    "query": "What was NVIDIA's net income in fiscal 2025?",
+    "relevant_chunks": [
+      {
+        "company": "nvidia",
+        "year": 2025,
+        "chunk_id": 2672
+      }
+    ],
+    "expected_answer": "$72,880 million"
+  },
+  {
+    "id": "nvidia_net_income_2026",
+    "query": "What was NVIDIA's net income in fiscal 2026?",
+    "relevant_chunks": [
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "chunk_id": 3150
+      }
+    ],
+    "expected_answer": "$120,067 million"
+  },
+  {
+    "id": "apple_cash_2023",
+    "query": "How much cash and cash equivalents did Apple have in 2023?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 437
+      }
+    ],
+    "expected_answer": "$29,965 million"
+  },
+  {
+    "id": "microsoft_revenue_2025",
+    "query": "What was Microsoft's revenue in fiscal 2025?",
+    "relevant_chunks": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "chunk_id": 1463
+      }
+    ],
+    "expected_answer": "$281,724 million"
+  },
+  {
+    "id": "nvidia_revenue_2026",
+    "query": "What was NVIDIA's revenue in fiscal 2026?",
+    "relevant_chunks": [
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "chunk_id": 3116
+      }
+    ],
+    "expected_answer": "$215,938 million"
+  },
+  {
+    "id": "jpmorgan_total_assets_2025",
+    "query": "What were JPMorgan Chase's total assets in 2025?",
+    "relevant_chunks": [
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "chunk_id": 4441
+      }
+    ],
+    "expected_answer": "$4,424,900 million"
+  },
+  {
+    "id": "apple_international_trade_risk",
+    "query": "What risks does Apple face from restrictions on international trade?",
+    "relevant_chunks": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "chunk_id": 375
+      }
+    ],
+    "expected_answer": "Restrictions on international trade, including tariffs and controls on imports or exports, can materially adversely affect Apple's operations and supply chain."
+  }
+]

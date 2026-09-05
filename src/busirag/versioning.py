@@ -1,0 +1,3 @@
+CHUNKING_VERSION = "v3-table-context"
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+EMBEDDING_VERSION = "v1"
