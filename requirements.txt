@@ -124,3 +124,6 @@ zstandard==0.25.0
 pydantic-settings
 redis
 prometheus-client
+
+PyJWT==2.14.0
+pwdlib==0.3.1

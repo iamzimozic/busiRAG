@@ -1,7 +1,7 @@
 """add tenants and document tenant
 
 Revision ID: 3de9f208a709
-Revises: 68e602c1a302
+Revises: 64cf882671cc
 Create Date: 2026-09-14
 """
 

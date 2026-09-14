@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     database_url: str
 
     redis_url: str = "redis://localhost:6379/0"
+
+    jwt_secret_key: str
+    jwt_algorithm: str = "HS256"
+    
     cache_ttl: int = Field(default=3600, ge=1)
 
     gemini_api_key: str

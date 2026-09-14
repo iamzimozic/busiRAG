@@ -24,6 +24,44 @@ class Tenant(Base):
         cascade="all, delete-orphan",
     )
 
+    users: Mapped[list["User"]] = relationship(
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+    )
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    tenant: Mapped["Tenant"] = relationship(
+            back_populates="users",
+        )
+
 class Document(Base):
     __tablename__ = "documents"
 

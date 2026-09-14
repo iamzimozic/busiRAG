@@ -2,6 +2,9 @@ from fastapi.testclient import TestClient
 
 from busirag.api.dependencies import get_rag_service
 from busirag.api.main import app
+from busirag.auth.jwt import create_access_token
+from busirag.db.models import User
+from busirag.db.session import SessionLocal
 from busirag.cache import RedisCache
 from busirag.cache.keys import build_query_cache_key
 from busirag.cache.serialization import serialize_rag_response
@@ -9,6 +12,8 @@ from busirag.generation.context import ContextItem
 from busirag.generation.response import RAGResponse
 from busirag.errors import InvalidQueryError
 from busirag.config import Settings
+
+from sqlalchemy import select
 
 
 class MockRAGService:
@@ -44,6 +49,7 @@ def test_query_endpoint():
             json={
                 "query": "What was Apple's net income in 2023?"
             },
+            headers=get_test_auth_headers(),
         )
 
         assert response.status_code == 200
@@ -80,6 +86,7 @@ def test_query_endpoint_rejects_blank_query():
             json={
                 "query": "   "
             },
+            headers=get_test_auth_headers(),
         )
 
         assert response.status_code == 422
@@ -100,6 +107,7 @@ def test_invalid_query_error_handler():
         response = client.post(
             "/query",
             json={"query": "valid query"},
+            headers=get_test_auth_headers(),
         )
 
         assert response.status_code == 400
@@ -153,6 +161,7 @@ def test_query_endpoint_returns_cached_response():
             response = client.post(
                 "/query",
                 json={"query": query},
+                headers=get_test_auth_headers(),
             )
 
         assert response.status_code == 200
@@ -250,6 +259,7 @@ def test_query_endpoint_caches_fresh_response():
             response = client.post(
                 "/query",
                 json={"query": query},
+                headers=get_test_auth_headers(),
             )
 
         assert response.status_code == 200
@@ -280,3 +290,29 @@ def test_query_endpoint_caches_fresh_response():
         rag_service_module.retrieve_reranked_chunks = original_retrieval
         app.dependency_overrides.clear()
         cache.client.delete(cache_key)
+
+def get_test_auth_headers() -> dict[str, str]:
+    settings = Settings()
+
+    with SessionLocal() as session:
+        user = session.scalar(
+            select(User).where(User.email == "test@busirag.local")
+        )
+
+        if user is None:
+            user = User(
+                email="test@busirag.local",
+                password_hash="test",
+                tenant_id=1,
+            )
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+        token = create_access_token(
+            user_id=user.id,
+            tenant_id=user.tenant_id,
+            settings=settings,
+        )
+
+    return {"Authorization": f"Bearer {token}"}
