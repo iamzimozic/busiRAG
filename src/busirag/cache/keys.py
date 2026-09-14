@@ -3,6 +3,7 @@ import hashlib
 
 def build_query_cache_key(
     query: str,
+    tenant_id: int,
     chunking_version: str | None,
     embedding_model: str | None,
     candidate_k: int,
@@ -16,6 +17,7 @@ def build_query_cache_key(
 
     return (
         "rag:v1:"
+        f"tenant={tenant_id}:"
         f"chunking={chunking_version}:"
         f"embedding={embedding_model}:"
         f"candidate_k={candidate_k}:"

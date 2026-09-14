@@ -12,7 +12,7 @@ from busirag.config import Settings
 
 
 class MockRAGService:
-    def query(self, session, query, request_id=None):
+    def query(self, session, query, tenant_id, request_id=None):
         return RAGResponse(
             answer="Apple's net income was $96,995 million.",
             sources=[
@@ -89,7 +89,7 @@ def test_query_endpoint_rejects_blank_query():
 
 def test_invalid_query_error_handler():
     class FailingRAGService:
-        def query(self, session, query, request_id=None):
+        def query(self, session, query, tenant_id, request_id=None):
             raise InvalidQueryError("query must not be empty")
 
     app.dependency_overrides[get_rag_service] = lambda: FailingRAGService()
@@ -138,6 +138,7 @@ def test_query_endpoint_returns_cached_response():
         chunking_version="v3-table-context",
         embedding_model="BAAI/bge-small-en-v1.5",
         candidate_k=50,
+        tenant_id=1,
         top_k=10,
     )
 
@@ -236,6 +237,7 @@ def test_query_endpoint_caches_fresh_response():
         chunking_version="v3-table-context",
         embedding_model="BAAI/bge-small-en-v1.5",
         candidate_k=50,
+        tenant_id=1,
         top_k=10,
     )
 

@@ -52,6 +52,7 @@ class RAGService:
         self,
         session: Session,
         query: str,
+        tenant_id: int,
         request_id: str | None = None,
     ) -> RAGResponse:
         if not query.strip():
@@ -64,6 +65,7 @@ class RAGService:
 
         cache_key = build_query_cache_key(
             query=query,
+            tenant_id=tenant_id,
             chunking_version=self.chunking_version,
             embedding_model=self.embedding_model,
             candidate_k=self.candidate_k,
@@ -106,6 +108,7 @@ class RAGService:
             retrieval_results = retrieve_reranked_chunks(
                 session=session,
                 query=query,
+                tenant_id=tenant_id,
                 embedding_provider=self.embedding_provider,
                 reranker=self.reranker,
                 top_k=self.top_k,

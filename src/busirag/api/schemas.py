@@ -25,3 +25,9 @@ class SourceResponse(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     sources: list[SourceResponse]
+
+class DocumentResponse(BaseModel):
+    id: int
+    company: str
+    year: int
+    filename: str

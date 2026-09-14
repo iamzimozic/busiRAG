@@ -8,6 +8,21 @@ from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from busirag.db.base import Base
 
+class Tenant(Base):
+    __tablename__ = "tenants"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    documents: Mapped[list["Document"]] = relationship(
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+    )
 
 class Document(Base):
     __tablename__ = "documents"
@@ -79,6 +94,16 @@ class Document(Base):
     embedding_model: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
+    )
+
+    tenant_id: Mapped[int] = mapped_column(
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+    )
+
+    tenant: Mapped["Tenant"] = relationship(
+        back_populates="documents",
     )
 
 

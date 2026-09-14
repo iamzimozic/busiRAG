@@ -35,6 +35,7 @@ def main():
         company=args.company,
         year=args.year,
         embedding_provider=provider,
+        tenant_id=1,
     )
 
 

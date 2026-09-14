@@ -20,6 +20,7 @@ def ingest_document(
     company: str,
     year: int,
     embedding_provider: EmbeddingProvider,
+    tenant_id: int,
 ) -> int:
     """
     Parse, chunk, embed and store a document.
@@ -38,6 +39,7 @@ def ingest_document(
 
         existing_document = session.scalar(
             select(DocumentModel).where(
+                DocumentModel.tenant_id == tenant_id,
                 DocumentModel.content_hash == document_hash,
                 DocumentModel.chunking_version == CHUNKING_VERSION,
                 DocumentModel.embedding_model == EMBEDDING_MODEL,
@@ -74,6 +76,7 @@ def ingest_document(
         print(f"Generated {len(chunks)} chunks")
 
         document = DocumentModel(
+            tenant_id=tenant_id,
             company=company,
             year=year,
             filename=path.name,

@@ -24,6 +24,7 @@ def retrieve_hybrid_chunks(
     session: Session,
     query: str,
     embedding_provider: EmbeddingProvider,
+    tenant_id: int,
     top_k: int = 5,
     candidate_k: int = 10,
     chunking_version: str | None = None,
@@ -44,6 +45,7 @@ def retrieve_hybrid_chunks(
         session=session,
         query=query,
         embedding_provider=embedding_provider,
+        tenant_id=tenant_id,
         top_k=candidate_k,
         chunking_version=chunking_version,
         embedding_model=embedding_model,
@@ -52,6 +54,7 @@ def retrieve_hybrid_chunks(
     sparse_results = retrieve_sparse_chunks(
         session=session,
         query=query,
+        tenant_id=tenant_id,
         top_k=candidate_k,
         chunking_version=chunking_version,
         embedding_model=embedding_model,

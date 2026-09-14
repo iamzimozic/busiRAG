@@ -14,3 +14,6 @@ def get_db() -> Generator[Session, None, None]:
 
 def get_rag_service(request: Request) -> RAGService:
     return request.app.state.rag_service
+
+def get_current_tenant_id() -> int:
+    return 1

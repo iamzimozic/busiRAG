@@ -24,6 +24,7 @@ def retrieve_similar_chunks(
     session: Session,
     query: str,
     embedding_provider: EmbeddingProvider,
+    tenant_id: int,
     top_k: int = 5,
     chunking_version: str | None = None,
     embedding_model: str | None = None,
@@ -44,7 +45,9 @@ def retrieve_similar_chunks(
         query_embedding
     )
 
-    filters = [] 
+    filters = [
+        Document.tenant_id == tenant_id,
+    ]
 
     if chunking_version is not None: 
         filters.append( 

@@ -22,6 +22,7 @@ class SparseRetrievalResult:
 def retrieve_sparse_chunks(
     session: Session,
     query: str,
+    tenant_id: int,
     top_k: int = 5,
     chunking_version: str | None = None,
     embedding_model: str | None = None,
@@ -43,7 +44,8 @@ def retrieve_sparse_chunks(
     )
 
     filters = [
-        Chunk.search_vector.op("@@")(search_query)
+        Chunk.search_vector.op("@@")(search_query),
+        Document.tenant_id == tenant_id,
     ]
 
     if chunking_version is not None:

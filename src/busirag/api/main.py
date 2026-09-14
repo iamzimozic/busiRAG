@@ -1,15 +1,29 @@
 import uuid
+from pathlib import Path
+from uuid import uuid4
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from busirag.api.dependencies import get_db, get_rag_service
+from busirag.api.dependencies import (
+    get_current_tenant_id,
+    get_db,
+    get_rag_service,
+)
 from busirag.config import Settings
 from busirag.cache import RedisCache
-from busirag.api.schemas import QueryRequest, QueryResponse, SourceResponse
+from busirag.api.schemas import (
+    DocumentResponse,
+    QueryRequest,
+    QueryResponse,
+    SourceResponse,
+)
+from busirag.db.models import Document
 from busirag.embeddings.local import LocalEmbeddingProvider
 from busirag.generation.gemini import GeminiProvider
 from busirag.generation.service import GenerationService
@@ -22,6 +36,7 @@ from busirag.errors import (
     InvalidQueryError,
     RetrievalError,
 )
+from busirag.ingestion import ingest_document
 from busirag.versioning import CHUNKING_VERSION, EMBEDDING_MODEL
 
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
@@ -39,6 +54,8 @@ async def lifespan(app: FastAPI):
     embedding_provider = LocalEmbeddingProvider(
         model_name=settings.embedding_model,
     )
+
+    app.state.embedding_provider = embedding_provider
 
     reranker = LocalReranker(
         model_name=settings.reranker_model,
@@ -79,9 +96,128 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+@app.get(
+    "/documents",
+    response_model=list[DocumentResponse],
+)
+def list_documents(
+    session: Session = Depends(get_db),
+    tenant_id: int = Depends(get_current_tenant_id),
+) -> list[DocumentResponse]:
+    documents = session.scalars(
+        select(Document)
+        .where(Document.tenant_id == tenant_id)
+        .order_by(Document.created_at.desc())
+    ).all()
+
+    return [
+        DocumentResponse(
+            id=document.id,
+            company=document.company,
+            year=document.year,
+            filename=document.filename,
+        )
+        for document in documents
+    ]
+
+@app.post(
+    "/documents",
+    status_code=201,
+)
+def upload_document(
+    file: UploadFile = File(...),
+    company: str = Form(...),
+    year: int = Form(...),
+    session: Session = Depends(get_db),
+    tenant_id: int = Depends(get_current_tenant_id),
+) -> dict[str, object]:
+    if not file.filename:
+        raise ValueError("filename is required")
+
+    extension = Path(file.filename).suffix.lower()
+
+    if extension not in {".pdf", ".docx"}:
+        raise ValueError("only PDF and DOCX files are supported")
+
+    company = company.strip()
+
+    if not company:
+        raise ValueError("company must not be empty")
+
+    upload_dir = Path("data/uploads")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_filename = f"{uuid4().hex}{extension}"
+    destination = upload_dir / safe_filename
+
+    with destination.open("wb") as output:
+        while chunk := file.file.read(1024 * 1024):
+            output.write(chunk)
+
+    try:
+        chunk_count = ingest_document(
+            path=destination,
+            company=company,
+            year=year,
+            embedding_provider=app.state.embedding_provider,
+            tenant_id=tenant_id,
+        )
+    except Exception:
+        destination.unlink(missing_ok=True)
+        raise
+
+    return {
+        "message": "Document uploaded successfully",
+        "filename": file.filename,
+        "company": company,
+        "year": year,
+        "chunks": chunk_count,
+    }
+
+from fastapi import HTTPException
+
+@app.delete(
+    "/documents/{document_id}",
+    status_code=204,
+)
+def delete_document(
+    document_id: int,
+    session: Session = Depends(get_db),
+    tenant_id: int = Depends(get_current_tenant_id),
+) -> None:
+    document = session.scalar(
+        select(Document).where(
+            Document.id == document_id,
+            Document.tenant_id == tenant_id,
+        )
+    )
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        )
+
+    source_path = Path(document.source_path)
+
+    session.delete(document)
+    session.commit()
+
+    source_path.unlink(missing_ok=True)
 
 @app.get("/metrics")
 def metrics() -> Response:
@@ -147,11 +283,13 @@ def query(
     request: QueryRequest,
     http_request: Request,
     session: Session = Depends(get_db),
+    tenant_id: int = Depends(get_current_tenant_id),
     rag_service: RAGService = Depends(get_rag_service),
 ) -> QueryResponse:
     result = rag_service.query(
         session=session,
         query=request.query,
+        tenant_id=tenant_id,
         request_id=http_request.state.request_id,
     )
 

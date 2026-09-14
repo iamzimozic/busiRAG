@@ -89,6 +89,8 @@ def test_rag_service_returns_cached_response_without_running_pipeline():
     result = service.query(
         session=None,
         query="What was Apple's revenue?",
+        tenant_id=1,
+        request_id="test-request-id",
     )
 
     assert result == cached_response
@@ -158,6 +160,8 @@ def test_rag_service_runs_pipeline_and_caches_on_miss():
         result = service.query(
             session=None,
             query="What was Apple's revenue?",
+            tenant_id=1,
+            request_id="test-request-id",
         )
     finally:
         rag_service_module.retrieve_reranked_chunks = (
@@ -237,6 +241,7 @@ def test_rag_service_logs_cache_hit_metrics(monkeypatch):
     result = service.query(
         session=None,
         query="What was Apple's revenue?",
+        tenant_id=1,
         request_id="test-request-id",
     )
 
@@ -301,6 +306,7 @@ def test_rag_service_logs_cache_miss_metrics(monkeypatch):
     result = service.query(
         session=None,
         query="What was Apple's revenue?",
+        tenant_id=1,
         request_id="test-request-id",
     )
 
