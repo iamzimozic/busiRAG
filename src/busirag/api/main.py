@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, Form, Request, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.security import HTTPAuthorizationCredentials
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ from busirag.api.dependencies import (
     get_current_tenant_id,
     get_db,
     get_rag_service,
+    security,
 )
 from busirag.config import Settings
 from busirag.cache import RedisCache
@@ -26,6 +28,7 @@ from busirag.api.schemas import (
     RegisterResponse,
     SourceResponse,
     TokenResponse,
+    UserResponse,
     WorkspaceResponse,
 )
 from busirag.auth.jwt import create_access_token
@@ -116,6 +119,60 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+@app.get(
+    "/auth/me",
+    response_model=UserResponse,
+)
+def get_current_user(
+    session: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> UserResponse:
+    settings = Settings()
+
+    try:
+        payload = decode_access_token(
+            credentials.credentials,
+            settings,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+        )
+
+    user_id = payload.get("sub")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+        )
+
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token",
+        )
+
+    user = session.scalar(
+        select(User).where(User.id == user_id)
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found",
+        )
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        tenant_id=user.tenant_id,
+        created_at=user.created_at,
+    )
 
 @app.post(
     "/auth/register",

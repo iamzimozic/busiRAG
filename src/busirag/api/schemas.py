@@ -57,3 +57,9 @@ class WorkspaceResponse(BaseModel):
     id: int
     name: str
     created_at: datetime
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    tenant_id: int
+    created_at: datetime
