@@ -3,7 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Request, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
@@ -19,11 +19,17 @@ from busirag.config import Settings
 from busirag.cache import RedisCache
 from busirag.api.schemas import (
     DocumentResponse,
+    LoginRequest,
     QueryRequest,
     QueryResponse,
+    RegisterRequest,
+    RegisterResponse,
     SourceResponse,
+    TokenResponse,
 )
-from busirag.db.models import Document
+from busirag.auth.jwt import create_access_token
+from busirag.auth.passwords import hash_password, verify_password
+from busirag.db.models import Document, Tenant, User
 from busirag.embeddings.local import LocalEmbeddingProvider
 from busirag.generation.gemini import GeminiProvider
 from busirag.generation.service import GenerationService
@@ -109,6 +115,80 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+@app.post(
+    "/auth/register",
+    response_model=RegisterResponse,
+    status_code=201,
+)
+def register(
+    payload: RegisterRequest,
+    session: Session = Depends(get_db),
+) -> RegisterResponse:
+    existing_user = session.scalar(
+        select(User).where(User.email == payload.email)
+    )
+
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Email already registered",
+        )
+
+    tenant = Tenant(
+        name=payload.email,
+    )
+    session.add(tenant)
+    session.flush()
+
+    user = User(
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        tenant_id=tenant.id,
+    )
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    return RegisterResponse(
+        id=user.id,
+        email=user.email,
+        tenant_id=user.tenant_id,
+    )
+
+@app.post(
+    "/auth/login",
+    response_model=TokenResponse,
+)
+def login(
+    payload: LoginRequest,
+    session: Session = Depends(get_db),
+) -> TokenResponse:
+    user = session.scalar(
+        select(User).where(User.email == payload.email)
+    )
+
+    if user is None or not verify_password(
+        payload.password,
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password",
+        )
+
+    settings = Settings()
+
+    access_token = create_access_token(
+        user_id=user.id,
+        tenant_id=user.tenant_id,
+        settings=settings,
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+    )
 
 @app.get(
     "/documents",

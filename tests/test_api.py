@@ -15,6 +15,84 @@ from busirag.config import Settings
 
 from sqlalchemy import select
 
+from uuid import uuid4
+
+def test_register_user():
+    email = f"register-test-{uuid4().hex}@busirag.local"
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/auth/register",
+            json={
+                "email": email,
+                "password": "password123",
+            },
+        )
+
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert data["email"] == email
+    assert data["tenant_id"] > 0
+    assert data["id"] > 0
+
+def test_login_user():
+    email = f"login-test-{uuid4().hex}@busirag.local"
+
+    with TestClient(app) as client:
+        register_response = client.post(
+            "/auth/register",
+            json={
+                "email": email,
+                "password": "password123",
+            },
+        )
+
+        assert register_response.status_code == 201
+
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": email,
+                "password": "password123",
+            },
+        )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["token_type"] == "bearer"
+    assert isinstance(data["access_token"], str)
+    assert len(data["access_token"]) > 0
+
+def test_login_user_rejects_invalid_password():
+    email = f"invalid-login-test-{uuid4().hex}@busirag.local"
+
+    with TestClient(app) as client:
+        register_response = client.post(
+            "/auth/register",
+            json={
+                "email": email,
+                "password": "password123",
+            },
+        )
+
+        assert register_response.status_code == 201
+
+        response = client.post(
+            "/auth/login",
+            json={
+                "email": email,
+                "password": "wrongpassword",
+            },
+        )
+
+    assert response.status_code == 401
+    assert response.json() == {
+        "detail": "Invalid email or password",
+    }
 
 class MockRAGService:
     def query(self, session, query, tenant_id, request_id=None):
