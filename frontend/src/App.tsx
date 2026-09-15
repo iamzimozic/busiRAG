@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import {
   deleteDocument,
+  getWorkspace,
   listDocuments,
   queryRAG,
   uploadDocument,
   type Document,
   type Source,
+  type Workspace,
 } from "./api/rag";
 
 type UserMessage = {
@@ -43,6 +45,9 @@ function App() {
   const [year, setYear] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
     null,
   );
@@ -86,6 +91,32 @@ function App() {
     }
 
     loadDocuments();
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated) {
+      return;
+    }
+
+    async function loadWorkspace() {
+      setWorkspaceLoading(true);
+      setWorkspaceError(null);
+
+      try {
+        const data = await getWorkspace();
+        setWorkspace(data);
+      } catch (err) {
+        setWorkspaceError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while loading workspace.",
+        );
+      } finally {
+        setWorkspaceLoading(false);
+      }
+    }
+
+    loadWorkspace();
   }, [authenticated]);
 
   if (!authenticated) {
@@ -596,10 +627,47 @@ async function handleDelete(documentId: number) {
           )}
 
           {page === "settings" && (
-            <div className="welcome">
-              <p className="eyebrow">Workspace</p>
-              <h2>Settings.</h2>
-              <p>Workspace settings will be available here later.</p>
+            <div className="settings-page">
+              <div className="welcome">
+                <p className="eyebrow">Workspace</p>
+                <h2>Settings.</h2>
+                <p>Manage your BusiRAG workspace.</p>
+              </div>
+
+              {workspaceLoading && (
+                <div className="loading-state">
+                  <div className="loading-spinner" />
+                  <p>Loading workspace...</p>
+                </div>
+              )}
+
+              {workspaceError && (
+                <div className="error-state">
+                  <h3>Could not load workspace</h3>
+                  <p>{workspaceError}</p>
+                </div>
+              )}
+
+              {!workspaceLoading && !workspaceError && workspace && (
+                <div className="workspace-card">
+                  <div className="workspace-field">
+                    <span>Workspace name</span>
+                    <strong>{workspace.name}</strong>
+                  </div>
+
+                  <div className="workspace-field">
+                    <span>Workspace ID</span>
+                    <strong>#{workspace.id}</strong>
+                  </div>
+
+                  <div className="workspace-field">
+                    <span>Created</span>
+                    <strong>
+                      {new Date(workspace.created_at).toLocaleDateString()}
+                    </strong>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

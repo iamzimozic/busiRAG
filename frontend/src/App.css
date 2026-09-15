@@ -742,3 +742,48 @@ input {
   background: #f5f5f5;
   color: #222;
 }
+
+.settings-page {
+  width: 100%;
+}
+
+.workspace-card {
+  width: 100%;
+  margin-top: 40px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+}
+
+.workspace-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.workspace-field:first-child {
+  padding-top: 0;
+}
+
+.workspace-field:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.workspace-field span {
+  color: #888;
+  font-size: 13px;
+}
+
+.workspace-field strong {
+  color: #222;
+  font-size: 14px;
+  font-weight: 600;
+}
