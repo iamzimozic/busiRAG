@@ -170,6 +170,29 @@ export async function getWorkspace(): Promise<Workspace> {
   return response.json();
 }
 
+export interface CurrentUser {
+  id: number;
+  email: string;
+  tenant_id: number;
+  created_at: string;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/auth/me`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail ||
+        error?.message ||
+        `Failed to load user (${response.status})`,
+    );
+  }
+
+  return response.json();
+}
+
 export async function uploadDocument(
   file: File,
   company: string,
