@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -51,3 +52,8 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class WorkspaceResponse(BaseModel):
+    id: int
+    name: str
+    created_at: datetime

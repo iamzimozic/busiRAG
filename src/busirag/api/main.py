@@ -26,6 +26,7 @@ from busirag.api.schemas import (
     RegisterResponse,
     SourceResponse,
     TokenResponse,
+    WorkspaceResponse,
 )
 from busirag.auth.jwt import create_access_token
 from busirag.auth.passwords import hash_password, verify_password
@@ -298,6 +299,30 @@ def delete_document(
     session.commit()
 
     source_path.unlink(missing_ok=True)
+
+@app.get(
+    "/workspace",
+    response_model=WorkspaceResponse,
+)
+def get_workspace(
+    session: Session = Depends(get_db),
+    tenant_id: int = Depends(get_current_tenant_id),
+) -> WorkspaceResponse:
+    tenant = session.scalar(
+        select(Tenant).where(Tenant.id == tenant_id)
+    )
+
+    if tenant is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Workspace not found",
+        )
+
+    return WorkspaceResponse(
+        id=tenant.id,
+        name=tenant.name,
+        created_at=tenant.created_at,
+    )
 
 @app.get("/metrics")
 def metrics() -> Response:
