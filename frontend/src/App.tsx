@@ -275,6 +275,10 @@ async function handleDelete(documentId: number) {
                   Search your business documents and get answers grounded in
                   your data.
                 </p>
+
+                <div className="knowledge-base-meta">
+                  <span>{documents.length} documents indexed</span>
+                </div>
               </div>
 
               <div className="chat-card">

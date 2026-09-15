@@ -156,6 +156,19 @@ input {
   line-height: 1.6;
 }
 
+.knowledge-base-meta {
+  margin-top: 18px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border: 1px solid #e3e3df;
+  border-radius: 7px;
+  background: #fafaf8;
+  color: #777;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .chat-card {
   min-height: 440px;
   margin-top: 40px;
