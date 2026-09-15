@@ -187,6 +187,31 @@ input {
   text-align: center;
 }
 
+.suggested-questions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.suggested-questions button {
+  padding: 9px 13px;
+  border: 1px solid #e1e1de;
+  border-radius: 8px;
+  background: #fafaf8;
+  color: #555;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.suggested-questions button:hover {
+  background: #f0f0ed;
+  border-color: #d2d2ce;
+  color: #222;
+}
+
 .empty-icon {
   width: 44px;
   height: 44px;
