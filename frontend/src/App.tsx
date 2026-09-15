@@ -53,6 +53,18 @@ function App() {
     () => Boolean(localStorage.getItem("access_token")),
   );
 
+  useEffect(() => {
+    function handleAuthExpired() {
+      setAuthenticated(false);
+    }
+
+    window.addEventListener("auth-expired", handleAuthExpired);
+
+    return () => {
+      window.removeEventListener("auth-expired", handleAuthExpired);
+    };
+  }, []);
+
   if (!authenticated) {
     return <Auth onAuthenticated={() => setAuthenticated(true)} />;
   }

@@ -24,6 +24,27 @@ function getAuthHeaders(): Record<string, string> {
     Authorization: `Bearer ${token}`,
   };
 }
+
+async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...getAuthHeaders(),
+    },
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem("access_token");
+    window.dispatchEvent(new Event("auth-expired"));
+  }
+
+  return response;
+}
+
 export interface LoginResponse {
   access_token: string;
   token_type: string;
@@ -33,7 +54,7 @@ export async function registerUser(
   email: string,
   password: string,
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/query`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -115,7 +136,7 @@ export async function uploadDocument(
   formData.append("company", company);
   formData.append("year", String(year));
 
-  const response = await fetch(`${API_BASE_URL}/documents`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/documents`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -135,7 +156,7 @@ export async function uploadDocument(
 }
 
 export async function deleteDocument(documentId: number): Promise<void> {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_BASE_URL}/documents/${documentId}`,
     {
       method: "DELETE",
