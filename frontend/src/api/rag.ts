@@ -148,6 +148,28 @@ export async function listDocuments(): Promise<Document[]> {
   return response.json();
 }
 
+export interface Workspace {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export async function getWorkspace(): Promise<Workspace> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/workspace`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail ||
+        error?.message ||
+        `Failed to load workspace (${response.status})`,
+    );
+  }
+
+  return response.json();
+}
+
 export async function uploadDocument(
   file: File,
   company: string,
