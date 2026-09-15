@@ -43,6 +43,9 @@ function App() {
   const [year, setYear] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
+    null,
+  );
   const [authenticated, setAuthenticated] = useState(
     () => Boolean(localStorage.getItem("access_token")),
   );
@@ -168,13 +171,7 @@ function App() {
   }
 
 async function handleDelete(documentId: number) {
-  const confirmed = window.confirm(
-    "Are you sure you want to delete this document?",
-  );
-
-  if (!confirmed) {
-    return;
-  }
+  setDeletingDocumentId(documentId);
 
   try {
     await deleteDocument(documentId);
@@ -188,6 +185,8 @@ async function handleDelete(documentId: number) {
         ? err.message
         : "Something went wrong while deleting the document.",
     );
+  } finally {
+    setDeletingDocumentId(null);
   }
 }
 
@@ -564,8 +563,9 @@ async function handleDelete(documentId: number) {
                           className="delete-button"
                           type="button"
                           onClick={() => handleDelete(document.id)}
+                          disabled={deletingDocumentId === document.id}
                         >
-                          Delete
+                          {deletingDocumentId === document.id ? "Deleting..." : "Delete"}
                         </button>
                       </div>
                     ))}
