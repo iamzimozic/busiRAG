@@ -559,14 +559,35 @@ async function handleDelete(documentId: number) {
                         <div className="document-year">
                           {document.year}
                         </div>
-                        <button
-                          className="delete-button"
-                          type="button"
-                          onClick={() => handleDelete(document.id)}
-                          disabled={deletingDocumentId === document.id}
-                        >
-                          {deletingDocumentId === document.id ? "Deleting..." : "Delete"}
-                        </button>
+                        {deletingDocumentId === document.id ? (
+                          <div className="delete-confirmation">
+                            <span>Delete?</span>
+
+                            <button
+                              className="delete-confirm-button"
+                              type="button"
+                              onClick={() => handleDelete(document.id)}
+                            >
+                              Yes
+                            </button>
+
+                            <button
+                              className="cancel-delete-button"
+                              type="button"
+                              onClick={() => setDeletingDocumentId(null)}
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="delete-button"
+                            type="button"
+                            onClick={() => setDeletingDocumentId(document.id)}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
