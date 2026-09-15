@@ -421,8 +421,7 @@ async function handleDelete(documentId: number) {
                 </div>
 
                 <form className="upload-form" onSubmit={handleUpload}>
-                  <label className="file-input">
-                    <span>Document</span>
+                  <label className="file-dropzone">
                     <input
                       type="file"
                       accept=".pdf,.docx"
@@ -430,8 +429,19 @@ async function handleDelete(documentId: number) {
                         setSelectedFile(event.target.files?.[0] ?? null)
                       }
                     />
-                    {selectedFile && (
-                      <small>{selectedFile.name}</small>
+
+                    <span className="file-dropzone-icon">↑</span>
+
+                    {selectedFile ? (
+                      <>
+                        <strong>{selectedFile.name}</strong>
+                        <small>Ready to upload</small>
+                      </>
+                    ) : (
+                      <>
+                        <strong>Choose a PDF or DOCX</strong>
+                        <small>Click to browse your files</small>
+                      </>
                     )}
                   </label>
 
