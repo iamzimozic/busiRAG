@@ -59,7 +59,7 @@ function App() {
   }, []);
   
   useEffect(() => {
-    if (page !== "documents") {
+    if (!authenticated) {
       return;
     }
 
@@ -82,7 +82,7 @@ function App() {
     }
 
     loadDocuments();
-  }, [page]);
+  }, [authenticated]);
 
   if (!authenticated) {
     return <Auth onAuthenticated={() => setAuthenticated(true)} />;
