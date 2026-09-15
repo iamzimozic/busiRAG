@@ -13,11 +13,82 @@ export interface QueryResponse {
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+}
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export async function registerUser(
+  email: string,
+  password: string,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail ||
+        error?.message ||
+        `Registration failed with status ${response.status}`,
+    );
+  }
+}
+
+export async function loginUser(
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail ||
+        error?.message ||
+        `Login failed with status ${response.status}`,
+    );
+  }
+
+  return response.json();
+}
+
 export async function queryRAG(query: string): Promise<QueryResponse> {
   const response = await fetch(`${API_BASE_URL}/query`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({ query }),
   });
@@ -46,6 +117,9 @@ export async function uploadDocument(
 
   const response = await fetch(`${API_BASE_URL}/documents`, {
     method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+    },
     body: formData,
   });
 
@@ -65,6 +139,9 @@ export async function deleteDocument(documentId: number): Promise<void> {
     `${API_BASE_URL}/documents/${documentId}`,
     {
       method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),
+      },
     },
   );
 

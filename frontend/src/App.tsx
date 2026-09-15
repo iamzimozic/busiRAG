@@ -1,3 +1,4 @@
+import Auth from "./Auth";
 import { useEffect, useState } from "react";
 import "./App.css";
 import {
@@ -48,6 +49,13 @@ function App() {
   const [year, setYear] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState(
+    () => Boolean(localStorage.getItem("access_token")),
+  );
+
+  if (!authenticated) {
+    return <Auth onAuthenticated={() => setAuthenticated(true)} />;
+  }
 
   useEffect(() => {
     if (page !== "documents") {
@@ -59,7 +67,13 @@ function App() {
       setDocumentsError(null);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/documents`);
+        const token = localStorage.getItem("access_token");
+
+        const response = await fetch(`${API_BASE_URL}/documents`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -147,7 +161,13 @@ function App() {
     setCompany("");
     setYear("");
 
-    const response = await fetch(`${API_BASE_URL}/documents`);
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(`${API_BASE_URL}/documents`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (response.ok) {
       const data: Document[] = await response.json();
@@ -251,6 +271,15 @@ async function handleDelete(documentId: number) {
           <div className="profile">
             <div className="avatar">U</div>
             <span>User</span>
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("access_token");
+                setAuthenticated(false);
+              }}
+            >
+              Logout
+            </button>
           </div>
         </header>
 

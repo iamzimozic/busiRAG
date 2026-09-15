@@ -34,3 +34,6 @@ diagnostic*.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Uploaded runtime files
+data/uploads/
