@@ -54,7 +54,7 @@ export async function registerUser(
   email: string,
   password: string,
 ): Promise<void> {
-  const response = await authenticatedFetch(`${API_BASE_URL}/query`, {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -105,7 +105,7 @@ export async function loginUser(
 }
 
 export async function queryRAG(query: string): Promise<QueryResponse> {
-  const response = await fetch(`${API_BASE_URL}/query`, {
+  const response = await authenticatedFetch(`${API_BASE_URL}/query`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
