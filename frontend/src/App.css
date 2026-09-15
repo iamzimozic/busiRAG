@@ -655,6 +655,11 @@ input {
   border-color: #999999;
 }
 
+.file-dropzone.dragging {
+  background: #f0f0ed;
+  border-color: #777777;
+}
+
 .file-dropzone input[type="file"] {
   display: none;
 }

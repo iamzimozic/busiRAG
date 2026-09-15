@@ -38,6 +38,7 @@ function App() {
   const [documentsError, setDocumentsError] = useState<string | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [company, setCompany] = useState("");
   const [year, setYear] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -421,7 +422,19 @@ async function handleDelete(documentId: number) {
                 </div>
 
                 <form className="upload-form" onSubmit={handleUpload}>
-                  <label className="file-dropzone">
+                  <label
+                    className={`file-dropzone ${isDragging ? "dragging" : ""}`}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      setIsDragging(false);
+                      setSelectedFile(event.dataTransfer.files?.[0] ?? null);
+                    }}
+                  >
                     <input
                       type="file"
                       accept=".pdf,.docx"
