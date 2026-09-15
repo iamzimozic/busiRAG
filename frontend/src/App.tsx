@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import {
   deleteDocument,
+  listDocuments,
   queryRAG,
   uploadDocument,
+  type Document,
   type Source,
 } from "./api/rag";
 
@@ -21,16 +23,7 @@ type AssistantMessage = {
 
 type Message = UserMessage | AssistantMessage;
 
-type Document = {
-  id: number;
-  company: string;
-  year: number;
-  filename: string;
-};
-
 type Page = "knowledge-base" | "documents" | "settings";
-
-const API_BASE_URL = "http://127.0.0.1:8000";
 
 function App() {
   const [page, setPage] = useState<Page>("knowledge-base");
@@ -75,21 +68,7 @@ function App() {
       setDocumentsError(null);
 
       try {
-        const token = localStorage.getItem("access_token");
-
-        const response = await fetch(`${API_BASE_URL}/documents`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to load documents (${response.status})`,
-          );
-        }
-
-        const data: Document[] = await response.json();
+        const data = await listDocuments();
         setDocuments(data);
       } catch (err) {
         setDocumentsError(
@@ -151,51 +130,41 @@ function App() {
   }
 
   async function handleUpload(event: React.FormEvent) {
-  event.preventDefault();
+    event.preventDefault();
 
-  if (!selectedFile || !company.trim() || !year) {
-    setUploadMessage("Please select a file, company, and year.");
-    return;
-  }
-
-  setUploading(true);
-  setUploadMessage(null);
-
-  try {
-    await uploadDocument(
-      selectedFile,
-      company.trim(),
-      Number(year),
-    );
-
-    setUploadMessage("Document uploaded successfully.");
-
-    setSelectedFile(null);
-    setCompany("");
-    setYear("");
-
-    const token = localStorage.getItem("access_token");
-
-    const response = await fetch(`${API_BASE_URL}/documents`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      const data: Document[] = await response.json();
-      setDocuments(data);
+    if (!selectedFile || !company.trim() || !year) {
+      setUploadMessage("Please select a file, company, and year.");
+      return;
     }
-  } catch (err) {
-    setUploadMessage(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong while uploading the document.",
-    );
-  } finally {
-    setUploading(false);
+
+    setUploading(true);
+    setUploadMessage(null);
+
+    try {
+      await uploadDocument(
+        selectedFile,
+        company.trim(),
+        Number(year),
+      );
+
+      setUploadMessage("Document uploaded successfully.");
+
+      setSelectedFile(null);
+      setCompany("");
+      setYear("");
+
+      const data = await listDocuments();
+      setDocuments(data);
+    } catch (err) {
+      setUploadMessage(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while uploading the document.",
+      );
+    } finally {
+      setUploading(false);
+    }
   }
-}
 
 async function handleDelete(documentId: number) {
   const confirmed = window.confirm(

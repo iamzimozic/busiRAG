@@ -11,6 +11,13 @@ export interface QueryResponse {
   sources: Source[];
 }
 
+export interface Document {
+  id: number;
+  company: string;
+  year: number;
+  filename: string;
+}
+
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 function getAuthHeaders(): Record<string, string> {
@@ -119,6 +126,22 @@ export async function queryRAG(query: string): Promise<QueryResponse> {
 
     throw new Error(
       error?.message || `Request failed with status ${response.status}`,
+    );
+  }
+
+  return response.json();
+}
+
+export async function listDocuments(): Promise<Document[]> {
+  const response = await authenticatedFetch(`${API_BASE_URL}/documents`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(
+      error?.detail ||
+        error?.message ||
+        `Failed to load documents (${response.status})`,
     );
   }
 
