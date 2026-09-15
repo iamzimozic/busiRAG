@@ -318,6 +318,35 @@ async function handleDelete(documentId: number) {
                         Ask a question about the documents in your knowledge
                         base.
                       </p>
+
+                      <div className="suggested-questions">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuery("What are the key financial highlights?")
+                          }
+                        >
+                          What are the key financial highlights?
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuery("What are the main risks mentioned in the documents?")
+                          }
+                        >
+                          What are the main risks mentioned?
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setQuery("What are the company's growth priorities?")
+                          }
+                        >
+                          What are the company's growth priorities?
+                        </button>
+                      </div>
                     </div>
                   )}
 
