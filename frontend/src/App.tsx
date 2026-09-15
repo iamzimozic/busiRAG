@@ -64,11 +64,7 @@ function App() {
       window.removeEventListener("auth-expired", handleAuthExpired);
     };
   }, []);
-
-  if (!authenticated) {
-    return <Auth onAuthenticated={() => setAuthenticated(true)} />;
-  }
-
+  
   useEffect(() => {
     if (page !== "documents") {
       return;
@@ -108,6 +104,11 @@ function App() {
 
     loadDocuments();
   }, [page]);
+
+  if (!authenticated) {
+    return <Auth onAuthenticated={() => setAuthenticated(true)} />;
+  }
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
