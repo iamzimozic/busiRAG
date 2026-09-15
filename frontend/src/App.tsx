@@ -278,7 +278,10 @@ async function handleDelete(documentId: number) {
                 </p>
 
                 <div className="knowledge-base-meta">
-                  <span>{documents.length} documents indexed</span>
+                  <span>
+                    {documents.length}{" "}
+                    {documents.length === 1 ? "document" : "documents"} indexed
+                  </span>
                 </div>
               </div>
 
