@@ -295,7 +295,7 @@ async function handleDelete(documentId: number) {
                 ? "Documents"
                 : page === "settings"
                   ? "Settings"
-                  : "Financial & Business Intelligence"}
+                  : "Your Knowledge Base"}
             </h1>
           </div>
 
