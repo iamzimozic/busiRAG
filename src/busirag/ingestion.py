@@ -21,6 +21,7 @@ def ingest_document(
     year: int,
     embedding_provider: EmbeddingProvider,
     tenant_id: int,
+    original_filename: str,
 ) -> int:
     """
     Parse, chunk, embed and store a document.
@@ -79,7 +80,7 @@ def ingest_document(
             tenant_id=tenant_id,
             company=company,
             year=year,
-            filename=path.name,
+            filename=original_filename,
             source_path=str(path),
             content_hash=document_hash,
             chunking_version=CHUNKING_VERSION,

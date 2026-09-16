@@ -313,6 +313,7 @@ def upload_document(
             year=year,
             embedding_provider=app.state.embedding_provider,
             tenant_id=tenant_id,
+            original_filename=file.filename,
         )
     except Exception:
         destination.unlink(missing_ok=True)

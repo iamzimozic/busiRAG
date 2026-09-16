@@ -407,9 +407,9 @@ async function handleDelete(documentId: number) {
                                       </div>
 
                                       <div className="source-details">
-                                        <strong>{source.company}</strong>
+                                        <strong>{source.filename}</strong>
                                         <span>
-                                          {source.year}
+                                          {source.company} · {source.year}
                                           {source.page_number !== null
                                             ? ` · Page ${source.page_number}`
                                             : ""}

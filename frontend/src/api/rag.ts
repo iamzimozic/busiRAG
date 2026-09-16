@@ -1,6 +1,7 @@
 export interface Source {
   citation_id: string;
   company: string;
+  filename: string;
   year: number;
   page_number: number | null;
   chunk_id: number;
