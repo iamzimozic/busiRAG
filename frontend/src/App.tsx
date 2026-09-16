@@ -4,12 +4,14 @@ import "./App.css";
 import {
   deleteDocument,
   getWorkspace,
+  getCurrentUser,
   listDocuments,
   queryRAG,
   uploadDocument,
   type Document,
   type Source,
   type Workspace,
+  type CurrentUser,
 } from "./api/rag";
 
 type UserMessage = {
@@ -35,6 +37,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [documentsError, setDocumentsError] = useState<string | null>(null);
@@ -117,6 +120,21 @@ function App() {
     }
 
     loadWorkspace();
+  }, [authenticated]);
+
+  useEffect(() => {
+    if (!authenticated) return;
+
+    async function loadCurrentUser() {
+      try {
+        const data = await getCurrentUser();
+        setCurrentUser(data);
+      } catch (err) {
+        console.error("Failed to load current user:", err);
+      }
+    }
+
+    loadCurrentUser();
   }, [authenticated]);
 
   if (!authenticated) {
@@ -282,8 +300,10 @@ async function handleDelete(documentId: number) {
           </div>
 
           <div className="profile">
-            <div className="avatar">U</div>
-            <span>User</span>
+            <div className="avatar">
+              {currentUser?.email?.charAt(0).toUpperCase() ?? "U"}
+            </div>
+            <span>{currentUser?.email ?? "User"}</span>
             <button
               type="button"
               onClick={() => {
@@ -320,10 +340,9 @@ async function handleDelete(documentId: number) {
                   {messages.length === 0 && !loading && !error && (
                     <div className="empty-state">
                       <div className="empty-icon">?</div>
-                      <h3>Start a conversation</h3>
+                      <h3>Ask your documents anything</h3>
                       <p>
-                        Ask a question about the documents in your knowledge
-                        base.
+                        Ask questions and get answers grounded in your documents.
                       </p>
 
                       <div className="suggested-questions">
