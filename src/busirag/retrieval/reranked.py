@@ -13,6 +13,7 @@ class RerankedRetrievalResult:
     document_id: int
     text: str
     company: str
+    filename: str
     year: int
     page_number: int | None
     section: str | None
@@ -69,6 +70,7 @@ def retrieve_reranked_chunks(
             document_id=candidates[index].document_id,
             text=candidates[index].text,
             company=candidates[index].company,
+            filename=candidates[index].filename,
             year=candidates[index].year,
             page_number=candidates[index].page_number,
             section=candidates[index].section,

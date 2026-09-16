@@ -13,6 +13,7 @@ class HybridRetrievalResult:
     document_id: int
     text: str
     company: str
+    filename: str
     year: int
     page_number: int | None
     section: str | None
@@ -105,6 +106,7 @@ def retrieve_hybrid_chunks(
                 document_id=result.document_id,
                 text=result.text,
                 company=result.company,
+                filename=result.filename,
                 year=result.year,
                 page_number=result.page_number,
                 section=result.section,
