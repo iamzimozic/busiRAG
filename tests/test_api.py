@@ -104,6 +104,7 @@ class MockRAGService:
                     rank=1,
                     chunk_id=435,
                     company="apple",
+                    filename="apple_10k.pdf",
                     year=2023,
                     page_number=32,
                     section=None,
@@ -142,6 +143,7 @@ def test_query_endpoint():
             {
                 "citation_id": "S1",
                 "company": "apple",
+                "filename": "apple_10k.pdf",
                 "year": 2023,
                 "page_number": 32,
                 "chunk_id": 435,
@@ -210,6 +212,7 @@ def test_query_endpoint_returns_cached_response():
                 rank=1,
                 chunk_id=123,
                 company="apple",
+                filename="apple_10k.pdf",
                 year=2023,
                 page_number=10,
                 section=None,
@@ -250,6 +253,7 @@ def test_query_endpoint_returns_cached_response():
                 {
                     "citation_id": "S1",
                     "company": "apple",
+                    "filename": "apple_10k.pdf",
                     "year": 2023,
                     "page_number": 10,
                     "chunk_id": 123,
@@ -290,6 +294,7 @@ def test_query_endpoint_caches_fresh_response():
                         rank=1,
                         chunk_id=456,
                         company="apple",
+                        filename="apple_10k.pdf",
                         year=2023,
                         page_number=20,
                         section=None,
@@ -348,6 +353,7 @@ def test_query_endpoint_caches_fresh_response():
                 {
                     "citation_id": "S1",
                     "company": "apple",
+                    "filename": "apple_10k.pdf",
                     "year": 2023,
                     "page_number": 20,
                     "chunk_id": 456,

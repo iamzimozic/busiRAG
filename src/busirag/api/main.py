@@ -461,6 +461,7 @@ def query(
             SourceResponse(
                 citation_id=source.citation_id,
                 company=source.company,
+                filename=source.filename,
                 year=source.year,
                 page_number=source.page_number,
                 chunk_id=source.chunk_id,

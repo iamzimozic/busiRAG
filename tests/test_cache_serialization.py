@@ -15,6 +15,7 @@ def test_rag_response_round_trip():
                 rank=1,
                 chunk_id=435,
                 company="apple",
+                filename="apple_10k.pdf",
                 year=2023,
                 page_number=32,
                 section="Financial Statements",

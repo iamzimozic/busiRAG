@@ -9,6 +9,7 @@ class ContextItem:
     rank: int
     chunk_id: int
     company: str
+    filename: str
     year: int
     page_number: int | None
     section: str | None
@@ -22,6 +23,7 @@ def build_context(results: list[RetrievalResult]) -> list[ContextItem]:
             rank=rank,
             chunk_id=result.chunk_id,
             company=result.company,
+            filename=result.filename,
             year=result.year,
             page_number=result.page_number,
             section=result.section,

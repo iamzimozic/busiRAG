@@ -18,6 +18,7 @@ class QueryRequest(BaseModel):
 class SourceResponse(BaseModel):
     citation_id: str
     company: str
+    filename: str
     year: int
     page_number: int | None
     chunk_id: int
