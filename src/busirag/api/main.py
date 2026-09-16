@@ -31,7 +31,7 @@ from busirag.api.schemas import (
     UserResponse,
     WorkspaceResponse,
 )
-from busirag.auth.jwt import create_access_token
+from busirag.auth.jwt import create_access_token, decode_access_token
 from busirag.auth.passwords import hash_password, verify_password
 from busirag.db.models import Document, Tenant, User
 from busirag.embeddings.local import LocalEmbeddingProvider
