@@ -1,0 +1,631 @@
+[
+  {
+    "id": "apple_net_income_2023",
+    "category": "table_numeric",
+    "query": "What was Apple's net income in 2023?",
+    "answerable": true,
+    "expected": {
+      "value": 96995,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2023"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "net income",
+          "96,995"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2024,
+        "contains": [
+          "net income",
+          "96,995"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "96,995"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apple_cash_2023",
+    "category": "table_numeric",
+    "query": "How much cash and cash equivalents did Apple have in 2023?",
+    "answerable": true,
+    "expected": {
+      "value": 29965,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2023"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "cash and cash equivalents",
+          "29,965"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2024,
+        "contains": [
+          "cash and cash equivalents",
+          "29,965"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apple_inventories_2023",
+    "category": "table_numeric",
+    "query": "What were Apple's inventories in 2023?",
+    "answerable": true,
+    "expected": {
+      "value": 6331,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2023"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "inventories",
+          "6,331"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apple_net_sales_2022",
+    "category": "table_numeric",
+    "query": "What were Apple's total net sales in 2022?",
+    "answerable": true,
+    "expected": {
+      "value": 394328,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2022"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2022,
+        "contains": [
+          "total net sales",
+          "394,328"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "total net sales",
+          "394,328"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2024,
+        "contains": [
+          "total net sales",
+          "394,328"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apple_net_income_2025",
+    "category": "table_numeric",
+    "query": "What was Apple's net income in fiscal 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 112010,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "112,010"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "microsoft_net_income_2024",
+    "category": "table_numeric",
+    "query": "What was Microsoft's net income in fiscal 2024?",
+    "answerable": true,
+    "expected": {
+      "value": 88136,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2024"
+    },
+    "evidence": [
+      {
+        "company": "microsoft",
+        "year": 2024,
+        "contains": [
+          "net income",
+          "88,136"
+        ]
+      },
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "88,136"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "microsoft_revenue_2025",
+    "category": "table_numeric",
+    "query": "What was Microsoft's revenue in fiscal 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 281724,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "revenue",
+          "281,724"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jpmorgan_net_income_2025",
+    "category": "table_numeric",
+    "query": "What was JPMorgan Chase's net income in 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 57048,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "57,048"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jpmorgan_total_assets_2025",
+    "category": "table_numeric",
+    "query": "What were JPMorgan Chase's total assets in 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 4424900,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "contains": [
+          "total assets",
+          "4,424,900"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jpmorgan_cet1_2024",
+    "category": "table_numeric",
+    "query": "What was JPMorgan Chase's CET1 capital ratio at the end of 2024?",
+    "answerable": true,
+    "expected": {
+      "value": 15.7,
+      "unit": "percent",
+      "period": "2024"
+    },
+    "evidence": [
+      {
+        "company": "jpmorgan",
+        "year": 2024,
+        "contains": [
+          "cet1",
+          "15.7"
+        ]
+      },
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "contains": [
+          "cet1",
+          "15.7"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nvidia_revenue_2026",
+    "category": "table_numeric",
+    "query": "What was NVIDIA's revenue in fiscal 2026?",
+    "answerable": true,
+    "expected": {
+      "value": 215938,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2026"
+    },
+    "evidence": [
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "contains": [
+          "revenue",
+          "215,938"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nvidia_data_center_revenue_2025",
+    "category": "table_numeric",
+    "query": "What was NVIDIA's Data Center revenue in fiscal 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 115186,
+      "unit": "million",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "nvidia",
+        "year": 2025,
+        "contains": [
+          "data center",
+          "115,186"
+        ]
+      },
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "contains": [
+          "data center",
+          "115,186"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apple_employees_2023",
+    "category": "narrative",
+    "query": "How many full-time equivalent employees did Apple have in 2023?",
+    "answerable": true,
+    "expected": {
+      "value": 161000,
+      "unit": "count"
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "full-time equivalent employees",
+          "161,000"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "microsoft_cloud_revenue_2025",
+    "category": "narrative",
+    "query": "How much Microsoft Cloud revenue did Microsoft report in fiscal 2025?",
+    "answerable": true,
+    "expected": {
+      "value": 168.9,
+      "unit": "billion",
+      "currency": "USD",
+      "period": "2025"
+    },
+    "evidence": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "microsoft cloud revenue",
+          "168.9 billion"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jpmorgan_net_income_change_2025",
+    "category": "multi_period",
+    "query": "How did JPMorgan Chase's net income change from 2024 to 2025?",
+    "answerable": true,
+    "expected": {
+      "figures": [
+        {
+          "value": 57048,
+          "unit": "million"
+        },
+        {
+          "value": 58471,
+          "unit": "million"
+        }
+      ]
+    },
+    "evidence": [
+      {
+        "company": "jpmorgan",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "57,048",
+          "58,471"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "microsoft_vs_nvidia_net_income_2025",
+    "category": "comparison",
+    "query": "Which company had higher net income in fiscal 2025, Microsoft or NVIDIA?",
+    "answerable": true,
+    "expected": {
+      "figures": [
+        {
+          "value": 101832,
+          "unit": "million"
+        },
+        {
+          "value": 72880,
+          "unit": "million"
+        }
+      ],
+      "must_include": [
+        "Microsoft"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "101,832"
+        ],
+        "group": "microsoft"
+      },
+      {
+        "company": "nvidia",
+        "year": 2025,
+        "contains": [
+          "net income",
+          "72,880"
+        ],
+        "group": "nvidia"
+      },
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "contains": [
+          "net income",
+          "72,880"
+        ],
+        "group": "nvidia"
+      }
+    ]
+  },
+  {
+    "id": "apple_vs_microsoft_rd",
+    "category": "comparison",
+    "query": "Compare Apple's R&D expense in 2023 with Microsoft's R&D expense in fiscal 2024.",
+    "answerable": true,
+    "expected": {
+      "figures": [
+        {
+          "value": 29915,
+          "unit": "million"
+        },
+        {
+          "value": 29510,
+          "unit": "million"
+        }
+      ]
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "research and development",
+          "29,915"
+        ],
+        "group": "apple"
+      },
+      {
+        "company": "apple",
+        "year": 2024,
+        "contains": [
+          "research and development",
+          "29,915"
+        ],
+        "group": "apple"
+      },
+      {
+        "company": "microsoft",
+        "year": 2024,
+        "contains": [
+          "research and development",
+          "29,510"
+        ],
+        "group": "microsoft"
+      },
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "research and development",
+          "29,510"
+        ],
+        "group": "microsoft"
+      }
+    ]
+  },
+  {
+    "id": "apple_international_trade_risk",
+    "category": "narrative",
+    "query": "What risks does Apple face from restrictions on international trade?",
+    "answerable": true,
+    "expected": {
+      "must_include": [
+        "tariff"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "apple",
+        "year": 2023,
+        "contains": [
+          "restrictions on international trade"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2024,
+        "contains": [
+          "restrictions on international trade"
+        ]
+      },
+      {
+        "company": "apple",
+        "year": 2025,
+        "contains": [
+          "restrictions on international trade"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nvidia_export_controls",
+    "category": "narrative",
+    "query": "How have U.S. export controls affected NVIDIA's ability to sell to China?",
+    "answerable": true,
+    "expected": {
+      "must_include": [
+        "China",
+        "H100"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "nvidia",
+        "year": 2025,
+        "contains": [
+          "export",
+          "china",
+          "licensing requirements"
+        ]
+      },
+      {
+        "company": "nvidia",
+        "year": 2026,
+        "contains": [
+          "export",
+          "china",
+          "licensing requirements"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "microsoft_openai_partnership",
+    "category": "narrative",
+    "query": "What is Microsoft's relationship with OpenAI?",
+    "answerable": true,
+    "expected": {
+      "must_include": [
+        "investor"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "microsoft",
+        "year": 2024,
+        "contains": [
+          "openai",
+          "strategic partnership"
+        ]
+      },
+      {
+        "company": "microsoft",
+        "year": 2025,
+        "contains": [
+          "openai",
+          "strategic partnership"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unanswerable_tesla_revenue_2024",
+    "category": "unanswerable",
+    "query": "What was Tesla's total revenue in 2024?",
+    "answerable": false
+  },
+  {
+    "id": "unanswerable_amazon_employees",
+    "category": "unanswerable",
+    "query": "How many employees did Amazon have at the end of 2025?",
+    "answerable": false
+  },
+  {
+    "id": "unanswerable_apple_revenue_2027",
+    "category": "unanswerable",
+    "query": "What were Apple's total net sales in fiscal 2027?",
+    "answerable": false
+  },
+  {
+    "id": "unanswerable_microsoft_net_income_2027",
+    "category": "unanswerable",
+    "query": "What was Microsoft's net income in fiscal 2027?",
+    "answerable": false
+  },
+  {
+    "id": "unanswerable_nvidia_2030_guidance",
+    "category": "unanswerable",
+    "query": "What revenue guidance did NVIDIA give for fiscal 2030?",
+    "answerable": false
+  }
+]

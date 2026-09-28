@@ -5,7 +5,7 @@ from busirag.generation.response import GeneratedAnswer
 
 def parse_generated_answer(
     raw_response: str,
-    valid_citation_ids: set[str],
+    valid_citation_ids: set[str] | None = None,
 ) -> GeneratedAnswer:
     response = raw_response.strip()
 
@@ -34,6 +34,12 @@ def parse_generated_answer(
 
     if not all(isinstance(citation, str) for citation in citations):
         raise ValueError("All citations must be strings")
+
+    if valid_citation_ids is None:
+        return GeneratedAnswer(
+            answer=answer,
+            citations=citations,
+        )
 
     invalid_citations = set(citations) - valid_citation_ids
 

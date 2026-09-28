@@ -18,6 +18,13 @@ from busirag.retrieval.reranked import (
     retrieve_reranked_chunks,
 )
 
+from busirag.retrieval.modes import (
+    DEFAULT_RETRIEVAL_MODE,
+    RETRIEVAL_MODES,
+    RetrievalMode,
+    retrieve_chunks,
+)
+
 __all__ = [
     "RetrievalResult",
     "retrieve_similar_chunks",
@@ -27,4 +34,8 @@ __all__ = [
     "retrieve_hybrid_chunks",
     "RerankedRetrievalResult",
     "retrieve_reranked_chunks",
+    "DEFAULT_RETRIEVAL_MODE",
+    "RETRIEVAL_MODES",
+    "RetrievalMode",
+    "retrieve_chunks",
 ]

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "REPLACE_numeric_example",
+    "category": "table_numeric",
+    "query": "What was <Company>'s net income in fiscal <YEAR>?",
+    "answerable": true,
+    "expected": {
+      "value": 0,
+      "unit": "million",
+      "currency": "USD",
+      "period": "<YEAR>",
+      "tolerance": 0.005
+    },
+    "evidence": [
+      {
+        "company": "<company as ingested, e.g. apple>",
+        "year": 0,
+        "contains": [
+          "net income",
+          "<figure exactly as printed, e.g. 96,995>"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "REPLACE_percent_example",
+    "category": "table_numeric",
+    "query": "What was <Company>'s gross margin percentage in <YEAR>?",
+    "answerable": true,
+    "expected": {
+      "value": 0.0,
+      "unit": "percent",
+      "period": "<YEAR>"
+    },
+    "evidence": [
+      {
+        "company": "<company>",
+        "year": 0,
+        "contains": [
+          "gross margin",
+          "<figure>"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "REPLACE_comparison_example",
+    "category": "comparison",
+    "query": "Compare <A>'s and <B>'s revenue in <YEAR>.",
+    "answerable": true,
+    "expected": {
+      "figures": [
+        {
+          "value": 0,
+          "unit": "million"
+        },
+        {
+          "value": 0,
+          "unit": "million"
+        }
+      ],
+      "must_include": [
+        "<A>",
+        "<B>"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "<a>",
+        "year": 0,
+        "contains": [
+          "revenue",
+          "<figure A>"
+        ],
+        "group": "a"
+      },
+      {
+        "company": "<b>",
+        "year": 0,
+        "contains": [
+          "revenue",
+          "<figure B>"
+        ],
+        "group": "b"
+      }
+    ]
+  },
+  {
+    "id": "REPLACE_text_example",
+    "category": "narrative",
+    "query": "What risks does <Company> describe regarding <topic>?",
+    "answerable": true,
+    "expected": {
+      "must_include": [
+        "<key phrase the answer must contain>"
+      ]
+    },
+    "evidence": [
+      {
+        "company": "<company>",
+        "year": 0,
+        "contains": [
+          "<distinctive phrase from the supporting passage>"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "REPLACE_unanswerable_example",
+    "category": "unanswerable",
+    "query": "<A question the ingested documents cannot answer>",
+    "answerable": false
+  }
+]

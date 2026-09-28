@@ -1,3 +1,3 @@
-from busirag.config.settings import Settings
+from busirag.config.settings import ApiSettings, Settings
 
-__all__ = ["Settings"]
+__all__ = ["ApiSettings", "Settings"]

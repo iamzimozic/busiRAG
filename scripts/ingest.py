@@ -26,6 +26,12 @@ def main():
         type=int,
     )
 
+    parser.add_argument(
+        "--tenant-id",
+        type=int,
+        default=1,
+    )
+
     args = parser.parse_args()
 
     provider = LocalEmbeddingProvider()
@@ -35,7 +41,8 @@ def main():
         company=args.company,
         year=args.year,
         embedding_provider=provider,
-        tenant_id=1,
+        tenant_id=args.tenant_id,
+        original_filename=args.path.name,
     )
 
 

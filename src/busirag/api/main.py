@@ -15,18 +15,25 @@ from busirag.api.dependencies import (
     get_current_tenant_id,
     get_db,
     get_rag_service,
+    get_rate_limiter,
+    get_settings,
+    require_writable_workspace,
     security,
 )
-from busirag.config import Settings
+from busirag.api.rate_limit import RateLimiter
+from busirag.config import ApiSettings, Settings
 from busirag.cache import RedisCache
 from busirag.api.schemas import (
+    DiagnosticsResponse,
     DocumentResponse,
     LoginRequest,
     QueryRequest,
     QueryResponse,
     RegisterRequest,
     RegisterResponse,
+    RetrievedChunkResponse,
     SourceResponse,
+    TimingsResponse,
     TokenResponse,
     UserResponse,
     WorkspaceResponse,
@@ -35,15 +42,18 @@ from busirag.auth.jwt import create_access_token, decode_access_token
 from busirag.auth.passwords import hash_password, verify_password
 from busirag.db.models import Document, Tenant, User
 from busirag.embeddings.local import LocalEmbeddingProvider
-from busirag.generation.gemini import GeminiProvider
+from busirag.generation.factory import create_llm_provider, llm_identity
+from busirag.generation.response import RAGResponse
 from busirag.generation.service import GenerationService
 from busirag.rag.service import RAGService
 from busirag.reranking.local import LocalReranker
 from busirag.config.validation import validate_embedding_configuration
 from busirag.errors import (
     BusiragError,
+    FeatureDisabledError,
     GenerationError,
     InvalidQueryError,
+    RateLimitExceededError,
     RetrievalError,
 )
 from busirag.ingestion import ingest_document
@@ -59,7 +69,15 @@ async def lifespan(app: FastAPI):
     settings = Settings()
     validate_embedding_configuration(settings.embedding_model)
 
+    app.state.settings = settings
+
     cache = RedisCache(settings.redis_url)
+
+    app.state.rate_limiter = RateLimiter(
+        cache.client,
+        per_minute=settings.rate_limit_per_minute,
+        per_day=settings.rate_limit_per_day,
+    )
 
     embedding_provider = LocalEmbeddingProvider(
         model_name=settings.embedding_model,
@@ -67,14 +85,15 @@ async def lifespan(app: FastAPI):
 
     app.state.embedding_provider = embedding_provider
 
-    reranker = LocalReranker(
-        model_name=settings.reranker_model,
+    # Only hybrid_rerank uses the cross-encoder; skipping it saves
+    # memory and startup time on small CPU hosts.
+    reranker = (
+        LocalReranker(model_name=settings.reranker_model)
+        if settings.retrieval_mode == "hybrid_rerank"
+        else None
     )
 
-    llm = GeminiProvider(
-        model=settings.gemini_model,
-        api_key=settings.gemini_api_key,
-    )
+    llm = create_llm_provider(settings)
 
     generation_service = GenerationService(llm)
 
@@ -88,6 +107,8 @@ async def lifespan(app: FastAPI):
         candidate_k=settings.candidate_k,
         top_k=settings.top_k,
         cache_ttl=settings.cache_ttl,
+        retrieval_mode=settings.retrieval_mode,
+        generation_model=llm_identity(settings),
     )
 
     yield
@@ -108,9 +129,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-    ],
+    allow_origins=ApiSettings().cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -182,6 +201,7 @@ def get_current_user(
 def register(
     payload: RegisterRequest,
     session: Session = Depends(get_db),
+    _: None = Depends(require_writable_workspace),
 ) -> RegisterResponse:
     existing_user = session.scalar(
         select(User).where(User.email == payload.email)
@@ -282,6 +302,7 @@ def upload_document(
     year: int = Form(...),
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
+    _: None = Depends(require_writable_workspace),
 ) -> dict[str, object]:
     if not file.filename:
         raise ValueError("filename is required")
@@ -337,6 +358,7 @@ def delete_document(
     document_id: int,
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
+    _: None = Depends(require_writable_workspace),
 ) -> None:
     document = session.scalar(
         select(Document).where(
@@ -431,6 +453,27 @@ async def generation_error_handler(request, exc):
         },
     )
 
+@app.exception_handler(RateLimitExceededError)
+async def rate_limit_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limited",
+            "message": str(exc),
+        },
+        headers={"Retry-After": str(exc.retry_after)},
+    )
+
+@app.exception_handler(FeatureDisabledError)
+async def feature_disabled_handler(request, exc):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "error": "feature_disabled",
+            "message": str(exc),
+        },
+    )
+
 @app.exception_handler(BusiragError)
 async def busirag_error_handler(request, exc):
     return JSONResponse(
@@ -448,7 +491,22 @@ def query(
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
     rag_service: RAGService = Depends(get_rag_service),
+    settings: Settings = Depends(get_settings),
+    rate_limiter: RateLimiter | None = Depends(get_rate_limiter),
 ) -> QueryResponse:
+    if len(request.query) > settings.max_query_length:
+        raise InvalidQueryError(
+            f"query must be at most {settings.max_query_length} characters"
+        )
+
+    if rate_limiter is not None:
+        client_host = (
+            http_request.client.host
+            if http_request.client is not None
+            else "unknown"
+        )
+        rate_limiter.check(client_host)
+
     result = rag_service.query(
         session=session,
         query=request.query,
@@ -466,7 +524,51 @@ def query(
                 year=source.year,
                 page_number=source.page_number,
                 chunk_id=source.chunk_id,
+                section=source.section,
+                element_type=source.element_type,
+                text=source.text,
+                retrieval_score=source.retrieval_score,
+                rerank_score=source.rerank_score,
             )
             for source in result.sources
+        ],
+        diagnostics=build_diagnostics_response(result),
+    )
+
+
+def build_diagnostics_response(
+    result: RAGResponse,
+) -> DiagnosticsResponse | None:
+    diagnostics = result.diagnostics
+
+    if diagnostics is None:
+        return None
+
+    cited_ids = {source.chunk_id for source in result.sources}
+
+    return DiagnosticsResponse(
+        request_id=diagnostics.request_id,
+        cache_hit=diagnostics.cache_hit,
+        retrieval_mode=diagnostics.retrieval_mode,
+        generation_model=diagnostics.generation_model,
+        timings=TimingsResponse(
+            retrieval_ms=diagnostics.retrieval_ms,
+            generation_ms=diagnostics.generation_ms,
+            total_ms=diagnostics.total_ms,
+        ),
+        retrieved=[
+            RetrievedChunkResponse(
+                citation_id=item.citation_id,
+                chunk_id=item.chunk_id,
+                company=item.company,
+                filename=item.filename,
+                year=item.year,
+                page_number=item.page_number,
+                element_type=item.element_type,
+                retrieval_score=item.retrieval_score,
+                rerank_score=item.rerank_score,
+                cited=item.chunk_id in cited_ids,
+            )
+            for item in result.retrieved
         ],
     )

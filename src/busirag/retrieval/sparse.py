@@ -12,6 +12,7 @@ class SparseRetrievalResult:
     document_id: int
     text: str
     company: str
+    filename: str
     year: int
     page_number: int | None
     section: str | None
@@ -84,6 +85,7 @@ def retrieve_sparse_chunks(
                 document_id=chunk.document_id,
                 text=chunk.text,
                 company=document.company,
+                filename=document.filename,
                 year=document.year,
                 page_number=chunk.page_number,
                 section=chunk.section,

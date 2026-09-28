@@ -12,6 +12,7 @@ from busirag.generation.context import ContextItem
 from busirag.generation.response import RAGResponse
 from busirag.errors import InvalidQueryError
 from busirag.config import Settings
+from busirag.generation.factory import llm_identity
 
 from sqlalchemy import select
 
@@ -147,8 +148,16 @@ def test_query_endpoint():
                 "year": 2023,
                 "page_number": 32,
                 "chunk_id": 435,
+                "section": None,
+                "element_type": "text",
+                "text": "Net income was $96,995 million.",
+                "retrieval_score": None,
+                "rerank_score": None,
             }
         ]
+
+        # MockRAGService returns no diagnostics.
+        assert data["diagnostics"] is None
 
     finally:
         app.dependency_overrides.clear()
@@ -229,6 +238,7 @@ def test_query_endpoint_returns_cached_response():
         candidate_k=50,
         tenant_id=1,
         top_k=10,
+        generation_model=llm_identity(settings),
     )
 
     cache.set(
@@ -247,7 +257,10 @@ def test_query_endpoint_returns_cached_response():
 
         assert response.status_code == 200
 
-        assert response.json() == {
+        data = response.json()
+        diagnostics = data.pop("diagnostics")
+
+        assert data == {
             "answer": "Cached Apple revenue answer.",
             "sources": [
                 {
@@ -257,9 +270,19 @@ def test_query_endpoint_returns_cached_response():
                     "year": 2023,
                     "page_number": 10,
                     "chunk_id": 123,
+                    "section": None,
+                    "element_type": "text",
+                    "text": "Cached source.",
+                    "retrieval_score": None,
+                    "rerank_score": None,
                 }
             ],
         }
+
+        assert diagnostics["cache_hit"] is True
+        assert diagnostics["request_id"] == response.headers["X-Request-ID"]
+        assert diagnostics["timings"]["retrieval_ms"] == 0
+        assert diagnostics["timings"]["generation_ms"] == 0
 
     finally:
         cache.client.delete(cache_key)
@@ -347,7 +370,10 @@ def test_query_endpoint_caches_fresh_response():
 
         assert response.status_code == 200
 
-        assert response.json() == {
+        data = response.json()
+        diagnostics = data.pop("diagnostics")
+
+        assert data == {
             "answer": "Fresh API answer.",
             "sources": [
                 {
@@ -357,9 +383,18 @@ def test_query_endpoint_caches_fresh_response():
                     "year": 2023,
                     "page_number": 20,
                     "chunk_id": 456,
+                    "section": None,
+                    "element_type": "text",
+                    "text": "Fresh source.",
+                    "retrieval_score": None,
+                    "rerank_score": None,
                 }
             ],
         }
+
+        assert diagnostics["cache_hit"] is False
+        assert diagnostics["retrieval_mode"] == "hybrid_rerank"
+        assert diagnostics["timings"]["total_ms"] >= 0
 
         cached_value = cache.get(cache_key)
 

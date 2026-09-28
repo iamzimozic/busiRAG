@@ -11,11 +11,15 @@ __pycache__
 .env
 
 tests/
-scripts/
 diagnostic*.txt
 
 data/raw/
 data/evaluation/
+data/uploads/
+
+# Deployed separately as a static site.
+frontend/
+node_modules/
 
 *.egg-info
 dist/

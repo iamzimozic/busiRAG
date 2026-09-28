@@ -1,0 +1,1816 @@
+{
+  "config": {
+    "timestamp": "2026-09-28T17:32:05.727884+00:00",
+    "git_commit": "e00dfb4",
+    "cases_file": "data/evaluation/retrieval.json",
+    "cases": 40,
+    "tenant_id": 1,
+    "top_k": 10,
+    "candidate_k": 50,
+    "chunking_version": "v3-table-context",
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "reranker_model": "BAAI/bge-reranker-v2-m3",
+    "device": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "warmup_queries": 3,
+    "documents": 12,
+    "unmatched_labels": []
+  },
+  "modes": {
+    "dense": {
+      "summary": {
+        "cases": 40,
+        "recall_at_5": 0.375,
+        "recall_at_10": 0.5875,
+        "mrr": 0.25853174603174606,
+        "latency_p50_ms": 30.150612500165153,
+        "latency_p95_ms": 44.74183140009696
+      },
+      "by_category": {
+        "comparison": {
+          "cases": 3,
+          "recall_at_5": 0.3333333333333333,
+          "recall_at_10": 0.5,
+          "mrr": 0.16666666666666666,
+          "latency_p50_ms": 30.135371000142186,
+          "latency_p95_ms": 30.3533383996637
+        },
+        "multi_period": {
+          "cases": 3,
+          "recall_at_5": 0.3333333333333333,
+          "recall_at_10": 0.6666666666666666,
+          "mrr": 0.1037037037037037,
+          "latency_p50_ms": 31.08031400006439,
+          "latency_p95_ms": 37.18973810027819
+        },
+        "narrative": {
+          "cases": 7,
+          "recall_at_5": 0.7142857142857143,
+          "recall_at_10": 0.8571428571428571,
+          "mrr": 0.4238095238095238,
+          "latency_p50_ms": 29.985023000335786,
+          "latency_p95_ms": 32.24974280005881
+        },
+        "table_numeric": {
+          "cases": 27,
+          "recall_at_5": 0.2962962962962963,
+          "recall_at_10": 0.5185185185185185,
+          "mrr": 0.2430922986478542,
+          "latency_p50_ms": 30.30872899989845,
+          "latency_p95_ms": 52.82517160012502
+        }
+      },
+      "cases": [
+        {
+          "case_id": "apple_net_income_2023",
+          "query": "What was Apple's net income in 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 38.39652599981491
+        },
+        {
+          "case_id": "apple_cash_2023",
+          "query": "How much cash and cash equivalents did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 59.8890940000274
+        },
+        {
+          "case_id": "apple_marketable_securities_2023",
+          "query": "How much current marketable securities did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 56.55594400013797
+        },
+        {
+          "case_id": "apple_inventories_2023",
+          "query": "What were Apple's inventories in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.50125200016919
+        },
+        {
+          "case_id": "apple_term_debt_due_2024",
+          "query": "How much term debt principal was due in 2024 for Apple?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 37.77713699992091
+        },
+        {
+          "case_id": "apple_long_lived_assets_china_2023",
+          "query": "How much long-lived assets did Apple have in China in 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 42.53056600009586
+        },
+        {
+          "case_id": "apple_cash_flow_net_income_2023",
+          "query": "What net income amount was reported in Apple's 2023 cash flow statement?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 38.557046000278206
+        },
+        {
+          "case_id": "apple_rd_2023",
+          "query": "How much did Apple spend on research and development in 2023?",
+          "relevant_rank": 8,
+          "group_ranks": {
+            "default": 8
+          },
+          "category": "table_numeric",
+          "latency_ms": 30.30872899989845
+        },
+        {
+          "case_id": "apple_net_sales_2022",
+          "query": "What were Apple's total net sales in 2022?",
+          "relevant_rank": 9,
+          "group_ranks": {
+            "default": 9
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.60864999977275
+        },
+        {
+          "case_id": "apple_net_income_2022",
+          "query": "What was Apple's net income in 2022?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 32.20387900000787
+        },
+        {
+          "case_id": "apple_net_sales_2025",
+          "query": "What were Apple's total net sales in fiscal 2025?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "default": 4
+          },
+          "category": "table_numeric",
+          "latency_ms": 44.12003600009484
+        },
+        {
+          "case_id": "apple_net_income_2025",
+          "query": "What was Apple's net income in fiscal 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 42.114483999739605
+        },
+        {
+          "case_id": "microsoft_net_income_2023",
+          "query": "What was Microsoft's net income in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 41.95839000021806
+        },
+        {
+          "case_id": "microsoft_net_income_2024",
+          "query": "What was Microsoft's net income in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 35.996289999729925
+        },
+        {
+          "case_id": "microsoft_net_income_2025",
+          "query": "What was Microsoft's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.042212000149448
+        },
+        {
+          "case_id": "microsoft_revenue_2023",
+          "query": "What was Microsoft's revenue in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 28.203301999838004
+        },
+        {
+          "case_id": "microsoft_revenue_2025",
+          "query": "What was Microsoft's revenue in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 28.063809999821387
+        },
+        {
+          "case_id": "microsoft_rd_2024",
+          "query": "How much did Microsoft spend on research and development in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 28.80659199990987
+        },
+        {
+          "case_id": "jpmorgan_net_income_2024",
+          "query": "What was JPMorgan Chase's net income in 2024?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.286297999988165
+        },
+        {
+          "case_id": "jpmorgan_net_income_2025",
+          "query": "What was JPMorgan Chase's net income in 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.77884499978245
+        },
+        {
+          "case_id": "jpmorgan_total_assets_2025",
+          "query": "What were JPMorgan Chase's total assets in 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 30.024555000181863
+        },
+        {
+          "case_id": "jpmorgan_cet1_2024",
+          "query": "What was JPMorgan Chase's CET1 capital ratio at the end of 2024?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.51513200014233
+        },
+        {
+          "case_id": "jpmorgan_deposits_2025",
+          "query": "How much in deposits did JPMorgan Chase have at the end of 2025?",
+          "relevant_rank": 7,
+          "group_ranks": {
+            "default": 7
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.22877899982268
+        },
+        {
+          "case_id": "nvidia_net_income_2025",
+          "query": "What was NVIDIA's net income in fiscal 2025?",
+          "relevant_rank": 8,
+          "group_ranks": {
+            "default": 8
+          },
+          "category": "table_numeric",
+          "latency_ms": 28.774577000149293
+        },
+        {
+          "case_id": "nvidia_net_income_2026",
+          "query": "What was NVIDIA's net income in fiscal 2026?",
+          "relevant_rank": 6,
+          "group_ranks": {
+            "default": 6
+          },
+          "category": "table_numeric",
+          "latency_ms": 30.635214000085398
+        },
+        {
+          "case_id": "nvidia_revenue_2026",
+          "query": "What was NVIDIA's revenue in fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.272609000145167
+        },
+        {
+          "case_id": "nvidia_data_center_revenue_2025",
+          "query": "What was NVIDIA's Data Center revenue in fiscal 2025?",
+          "relevant_rank": 7,
+          "group_ranks": {
+            "default": 7
+          },
+          "category": "table_numeric",
+          "latency_ms": 29.66442399974767
+        },
+        {
+          "case_id": "apple_international_trade_risk",
+          "query": "What risks does Apple face from restrictions on international trade?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "narrative",
+          "latency_ms": 29.53759199999695
+        },
+        {
+          "case_id": "nvidia_export_controls",
+          "query": "How have U.S. export controls affected NVIDIA's ability to sell to China?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "narrative",
+          "latency_ms": 30.16585400018812
+        },
+        {
+          "case_id": "microsoft_openai_partnership",
+          "query": "What is Microsoft's relationship with OpenAI?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 29.844292000234418
+        },
+        {
+          "case_id": "jpmorgan_operational_risk",
+          "query": "How does JPMorgan Chase describe operational risk?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 29.41550700006701
+        },
+        {
+          "case_id": "apple_employees_2023",
+          "query": "How many full-time equivalent employees did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 30.037343000003602
+        },
+        {
+          "case_id": "microsoft_employees_2025",
+          "query": "How many people did Microsoft employ as of June 30, 2025?",
+          "relevant_rank": 10,
+          "group_ranks": {
+            "default": 10
+          },
+          "category": "narrative",
+          "latency_ms": 33.142838000003394
+        },
+        {
+          "case_id": "microsoft_cloud_revenue_2025",
+          "query": "How much Microsoft Cloud revenue did Microsoft report in fiscal 2025?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "narrative",
+          "latency_ms": 29.985023000335786
+        },
+        {
+          "case_id": "apple_net_sales_change_2023",
+          "query": "How did Apple's total net sales change from 2022 to 2023?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "multi_period",
+          "latency_ms": 31.08031400006439
+        },
+        {
+          "case_id": "jpmorgan_net_income_change_2025",
+          "query": "How did JPMorgan Chase's net income change from 2024 to 2025?",
+          "relevant_rank": 9,
+          "group_ranks": {
+            "default": 9
+          },
+          "category": "multi_period",
+          "latency_ms": 30.22031299997252
+        },
+        {
+          "case_id": "nvidia_revenue_growth_2026",
+          "query": "How much did NVIDIA's revenue grow from fiscal 2025 to fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "multi_period",
+          "latency_ms": 37.86856300030195
+        },
+        {
+          "case_id": "microsoft_vs_nvidia_net_income_2025",
+          "query": "Which company had higher net income in fiscal 2025, Microsoft or NVIDIA?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "microsoft": null,
+            "nvidia": null
+          },
+          "category": "comparison",
+          "latency_ms": 30.135371000142186
+        },
+        {
+          "case_id": "apple_vs_microsoft_rd",
+          "query": "Compare Apple's R&D expense in 2023 with Microsoft's R&D expense in fiscal 2024.",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "apple": 4,
+            "microsoft": null
+          },
+          "category": "comparison",
+          "latency_ms": 29.624122000313946
+        },
+        {
+          "case_id": "apple_vs_microsoft_employees_2025",
+          "query": "How many full-time employees did Apple and Microsoft each have in 2025?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "apple": 4,
+            "microsoft": 7
+          },
+          "category": "comparison",
+          "latency_ms": 30.377556999610533
+        }
+      ]
+    },
+    "sparse": {
+      "summary": {
+        "cases": 40,
+        "recall_at_5": 0.225,
+        "recall_at_10": 0.275,
+        "mrr": 0.145625,
+        "latency_p50_ms": 1.5553735001958557,
+        "latency_p95_ms": 4.277954399958617
+      },
+      "by_category": {
+        "comparison": {
+          "cases": 3,
+          "recall_at_5": 0.0,
+          "recall_at_10": 0.0,
+          "mrr": 0.0,
+          "latency_p50_ms": 1.2945130001753569,
+          "latency_p95_ms": 1.3882812997962901
+        },
+        "multi_period": {
+          "cases": 3,
+          "recall_at_5": 0.3333333333333333,
+          "recall_at_10": 0.6666666666666666,
+          "mrr": 0.375,
+          "latency_p50_ms": 3.293236999979854,
+          "latency_p95_ms": 4.177775899961489
+        },
+        "narrative": {
+          "cases": 7,
+          "recall_at_5": 0.14285714285714285,
+          "recall_at_10": 0.14285714285714285,
+          "mrr": 0.14285714285714285,
+          "latency_p50_ms": 1.2415270002748002,
+          "latency_p95_ms": 1.5799690000221744
+        },
+        "table_numeric": {
+          "cases": 27,
+          "recall_at_5": 0.25925925925925924,
+          "recall_at_10": 0.2962962962962963,
+          "mrr": 0.13703703703703704,
+          "latency_p50_ms": 1.8732630001068173,
+          "latency_p95_ms": 4.293027699895902
+        }
+      },
+      "cases": [
+        {
+          "case_id": "apple_net_income_2023",
+          "query": "What was Apple's net income in 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.792681000300945
+        },
+        {
+          "case_id": "apple_cash_2023",
+          "query": "How much cash and cash equivalents did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 0.9167570001409331
+        },
+        {
+          "case_id": "apple_marketable_securities_2023",
+          "query": "How much current marketable securities did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.0081709997393773
+        },
+        {
+          "case_id": "apple_inventories_2023",
+          "query": "What were Apple's inventories in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.7072389996428683
+        },
+        {
+          "case_id": "apple_term_debt_due_2024",
+          "query": "How much term debt principal was due in 2024 for Apple?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 0.9026940001604089
+        },
+        {
+          "case_id": "apple_long_lived_assets_china_2023",
+          "query": "How much long-lived assets did Apple have in China in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.2141809997956443
+        },
+        {
+          "case_id": "apple_cash_flow_net_income_2023",
+          "query": "What net income amount was reported in Apple's 2023 cash flow statement?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.034912999784865
+        },
+        {
+          "case_id": "apple_rd_2023",
+          "query": "How much did Apple spend on research and development in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.3532749999285443
+        },
+        {
+          "case_id": "apple_net_sales_2022",
+          "query": "What were Apple's total net sales in 2022?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 4.147176000060426
+        },
+        {
+          "case_id": "apple_net_income_2022",
+          "query": "What was Apple's net income in 2022?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 3.266316999997798
+        },
+        {
+          "case_id": "apple_net_sales_2025",
+          "query": "What were Apple's total net sales in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.6417020001426863
+        },
+        {
+          "case_id": "apple_net_income_2025",
+          "query": "What was Apple's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.3083839999126212
+        },
+        {
+          "case_id": "microsoft_net_income_2023",
+          "query": "What was Microsoft's net income in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.8732630001068173
+        },
+        {
+          "case_id": "microsoft_net_income_2024",
+          "query": "What was Microsoft's net income in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.6896070001166663
+        },
+        {
+          "case_id": "microsoft_net_income_2025",
+          "query": "What was Microsoft's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.168601000244962
+        },
+        {
+          "case_id": "microsoft_revenue_2023",
+          "query": "What was Microsoft's revenue in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.8811320003114815
+        },
+        {
+          "case_id": "microsoft_revenue_2025",
+          "query": "What was Microsoft's revenue in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.40399799986335
+        },
+        {
+          "case_id": "microsoft_rd_2024",
+          "query": "How much did Microsoft spend on research and development in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.2854900001002534
+        },
+        {
+          "case_id": "jpmorgan_net_income_2024",
+          "query": "What was JPMorgan Chase's net income in 2024?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "table_numeric",
+          "latency_ms": 4.707447000328102
+        },
+        {
+          "case_id": "jpmorgan_net_income_2025",
+          "query": "What was JPMorgan Chase's net income in 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 4.244124999786436
+        },
+        {
+          "case_id": "jpmorgan_total_assets_2025",
+          "query": "What were JPMorgan Chase's total assets in 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 4.313985999942815
+        },
+        {
+          "case_id": "jpmorgan_cet1_2024",
+          "query": "What was JPMorgan Chase's CET1 capital ratio at the end of 2024?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.9855809998480254
+        },
+        {
+          "case_id": "jpmorgan_deposits_2025",
+          "query": "How much in deposits did JPMorgan Chase have at the end of 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 1.1882290000357898
+        },
+        {
+          "case_id": "nvidia_net_income_2025",
+          "query": "What was NVIDIA's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3.2679089999874122
+        },
+        {
+          "case_id": "nvidia_net_income_2026",
+          "query": "What was NVIDIA's net income in fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.5561430002198904
+        },
+        {
+          "case_id": "nvidia_revenue_2026",
+          "query": "What was NVIDIA's revenue in fiscal 2026?",
+          "relevant_rank": 6,
+          "group_ranks": {
+            "default": 6
+          },
+          "category": "table_numeric",
+          "latency_ms": 3.325815000152943
+        },
+        {
+          "case_id": "nvidia_data_center_revenue_2025",
+          "query": "What was NVIDIA's Data Center revenue in fiscal 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 2.2124090000943397
+        },
+        {
+          "case_id": "apple_international_trade_risk",
+          "query": "What risks does Apple face from restrictions on international trade?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 1.2415270002748002
+        },
+        {
+          "case_id": "nvidia_export_controls",
+          "query": "How have U.S. export controls affected NVIDIA's ability to sell to China?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 1.2915890001750086
+        },
+        {
+          "case_id": "microsoft_openai_partnership",
+          "query": "What is Microsoft's relationship with OpenAI?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 0.8649809997223201
+        },
+        {
+          "case_id": "jpmorgan_operational_risk",
+          "query": "How does JPMorgan Chase describe operational risk?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 1.6430830000899732
+        },
+        {
+          "case_id": "apple_employees_2023",
+          "query": "How many full-time equivalent employees did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 1.1930769996979507
+        },
+        {
+          "case_id": "microsoft_employees_2025",
+          "query": "How many people did Microsoft employ as of June 30, 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 1.4327029998639773
+        },
+        {
+          "case_id": "microsoft_cloud_revenue_2025",
+          "query": "How much Microsoft Cloud revenue did Microsoft report in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 1.1492040002849535
+        },
+        {
+          "case_id": "apple_net_sales_change_2023",
+          "query": "How did Apple's total net sales change from 2022 to 2023?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "multi_period",
+          "latency_ms": 3.293236999979854
+        },
+        {
+          "case_id": "jpmorgan_net_income_change_2025",
+          "query": "How did JPMorgan Chase's net income change from 2024 to 2025?",
+          "relevant_rank": 8,
+          "group_ranks": {
+            "default": 8
+          },
+          "category": "multi_period",
+          "latency_ms": 4.276057999959448
+        },
+        {
+          "case_id": "nvidia_revenue_growth_2026",
+          "query": "How much did NVIDIA's revenue grow from fiscal 2025 to fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "multi_period",
+          "latency_ms": 1.4690450002490252
+        },
+        {
+          "case_id": "microsoft_vs_nvidia_net_income_2025",
+          "query": "Which company had higher net income in fiscal 2025, Microsoft or NVIDIA?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "microsoft": null,
+            "nvidia": null
+          },
+          "category": "comparison",
+          "latency_ms": 1.3986999997541716
+        },
+        {
+          "case_id": "apple_vs_microsoft_rd",
+          "query": "Compare Apple's R&D expense in 2023 with Microsoft's R&D expense in fiscal 2024.",
+          "relevant_rank": null,
+          "group_ranks": {
+            "apple": null,
+            "microsoft": null
+          },
+          "category": "comparison",
+          "latency_ms": 1.2945130001753569
+        },
+        {
+          "case_id": "apple_vs_microsoft_employees_2025",
+          "query": "How many full-time employees did Apple and Microsoft each have in 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "apple": null,
+            "microsoft": null
+          },
+          "category": "comparison",
+          "latency_ms": 1.1294969999653404
+        }
+      ]
+    },
+    "hybrid": {
+      "summary": {
+        "cases": 40,
+        "recall_at_5": 0.5,
+        "recall_at_10": 0.5625,
+        "mrr": 0.29461309523809526,
+        "latency_p50_ms": 43.39178050031478,
+        "latency_p95_ms": 53.4349624000697
+      },
+      "by_category": {
+        "comparison": {
+          "cases": 3,
+          "recall_at_5": 0.3333333333333333,
+          "recall_at_10": 0.5,
+          "mrr": 0.16666666666666666,
+          "latency_p50_ms": 44.52077599989934,
+          "latency_p95_ms": 46.81038500016257
+        },
+        "multi_period": {
+          "cases": 3,
+          "recall_at_5": 0.3333333333333333,
+          "recall_at_10": 0.3333333333333333,
+          "mrr": 0.3333333333333333,
+          "latency_p50_ms": 44.6735290001925,
+          "latency_p95_ms": 46.64570890013238
+        },
+        "narrative": {
+          "cases": 7,
+          "recall_at_5": 0.8571428571428571,
+          "recall_at_10": 0.8571428571428571,
+          "mrr": 0.5523809523809524,
+          "latency_p50_ms": 42.65661199997339,
+          "latency_p95_ms": 44.432746000074985
+        },
+        "table_numeric": {
+          "cases": 27,
+          "recall_at_5": 0.4444444444444444,
+          "recall_at_10": 0.5185185185185185,
+          "mrr": 0.2376984126984127,
+          "latency_p50_ms": 43.08284100034143,
+          "latency_p95_ms": 54.23362259998612
+        }
+      },
+      "cases": [
+        {
+          "case_id": "apple_net_income_2023",
+          "query": "What was Apple's net income in 2023?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.08284100034143
+        },
+        {
+          "case_id": "apple_cash_2023",
+          "query": "How much cash and cash equivalents did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 37.793289000092045
+        },
+        {
+          "case_id": "apple_marketable_securities_2023",
+          "query": "How much current marketable securities did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 39.87783899992792
+        },
+        {
+          "case_id": "apple_inventories_2023",
+          "query": "What were Apple's inventories in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 41.72924000022249
+        },
+        {
+          "case_id": "apple_term_debt_due_2024",
+          "query": "How much term debt principal was due in 2024 for Apple?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 47.209360000124434
+        },
+        {
+          "case_id": "apple_long_lived_assets_china_2023",
+          "query": "How much long-lived assets did Apple have in China in 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 50.72832099995139
+        },
+        {
+          "case_id": "apple_cash_flow_net_income_2023",
+          "query": "What net income amount was reported in Apple's 2023 cash flow statement?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 41.953781000302115
+        },
+        {
+          "case_id": "apple_rd_2023",
+          "query": "How much did Apple spend on research and development in 2023?",
+          "relevant_rank": 8,
+          "group_ranks": {
+            "default": 8
+          },
+          "category": "table_numeric",
+          "latency_ms": 37.777822999942146
+        },
+        {
+          "case_id": "apple_net_sales_2022",
+          "query": "What were Apple's total net sales in 2022?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "default": 4
+          },
+          "category": "table_numeric",
+          "latency_ms": 40.805634999742324
+        },
+        {
+          "case_id": "apple_net_income_2022",
+          "query": "What was Apple's net income in 2022?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 41.892341999755445
+        },
+        {
+          "case_id": "apple_net_sales_2025",
+          "query": "What were Apple's total net sales in fiscal 2025?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "default": 4
+          },
+          "category": "table_numeric",
+          "latency_ms": 37.68758499973046
+        },
+        {
+          "case_id": "apple_net_income_2025",
+          "query": "What was Apple's net income in fiscal 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 39.009275999887905
+        },
+        {
+          "case_id": "microsoft_net_income_2023",
+          "query": "What was Microsoft's net income in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 37.49249700013024
+        },
+        {
+          "case_id": "microsoft_net_income_2024",
+          "query": "What was Microsoft's net income in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 41.760896000141656
+        },
+        {
+          "case_id": "microsoft_net_income_2025",
+          "query": "What was Microsoft's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.01253599987831
+        },
+        {
+          "case_id": "microsoft_revenue_2023",
+          "query": "What was Microsoft's revenue in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 44.27733300008185
+        },
+        {
+          "case_id": "microsoft_revenue_2025",
+          "query": "What was Microsoft's revenue in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 42.09012999990591
+        },
+        {
+          "case_id": "microsoft_rd_2024",
+          "query": "How much did Microsoft spend on research and development in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 47.12055300024076
+        },
+        {
+          "case_id": "jpmorgan_net_income_2024",
+          "query": "What was JPMorgan Chase's net income in 2024?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 53.37352700007614
+        },
+        {
+          "case_id": "jpmorgan_net_income_2025",
+          "query": "What was JPMorgan Chase's net income in 2025?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "default": 4
+          },
+          "category": "table_numeric",
+          "latency_ms": 54.60223499994754
+        },
+        {
+          "case_id": "jpmorgan_total_assets_2025",
+          "query": "What were JPMorgan Chase's total assets in 2025?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "table_numeric",
+          "latency_ms": 52.229877000172564
+        },
+        {
+          "case_id": "jpmorgan_cet1_2024",
+          "query": "What was JPMorgan Chase's CET1 capital ratio at the end of 2024?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 51.29239100006089
+        },
+        {
+          "case_id": "jpmorgan_deposits_2025",
+          "query": "How much in deposits did JPMorgan Chase have at the end of 2025?",
+          "relevant_rank": 7,
+          "group_ranks": {
+            "default": 7
+          },
+          "category": "table_numeric",
+          "latency_ms": 44.82952899979864
+        },
+        {
+          "case_id": "nvidia_net_income_2025",
+          "query": "What was NVIDIA's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.95130600005359
+        },
+        {
+          "case_id": "nvidia_net_income_2026",
+          "query": "What was NVIDIA's net income in fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.3401110003615
+        },
+        {
+          "case_id": "nvidia_revenue_2026",
+          "query": "What was NVIDIA's revenue in fiscal 2026?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "table_numeric",
+          "latency_ms": 57.576780000090366
+        },
+        {
+          "case_id": "nvidia_data_center_revenue_2025",
+          "query": "What was NVIDIA's Data Center revenue in fiscal 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 43.678549000105704
+        },
+        {
+          "case_id": "apple_international_trade_risk",
+          "query": "What risks does Apple face from restrictions on international trade?",
+          "relevant_rank": 5,
+          "group_ranks": {
+            "default": 5
+          },
+          "category": "narrative",
+          "latency_ms": 40.98535200000697
+        },
+        {
+          "case_id": "nvidia_export_controls",
+          "query": "How have U.S. export controls affected NVIDIA's ability to sell to China?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "narrative",
+          "latency_ms": 42.65661199997339
+        },
+        {
+          "case_id": "microsoft_openai_partnership",
+          "query": "What is Microsoft's relationship with OpenAI?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 40.4216520000773
+        },
+        {
+          "case_id": "jpmorgan_operational_risk",
+          "query": "How does JPMorgan Chase describe operational risk?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 43.25189700011833
+        },
+        {
+          "case_id": "apple_employees_2023",
+          "query": "How many full-time equivalent employees did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 43.44345000026806
+        },
+        {
+          "case_id": "microsoft_employees_2025",
+          "query": "How many people did Microsoft employ as of June 30, 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 42.59375800029375
+        },
+        {
+          "case_id": "microsoft_cloud_revenue_2025",
+          "query": "How much Microsoft Cloud revenue did Microsoft report in fiscal 2025?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "narrative",
+          "latency_ms": 44.85672999999224
+        },
+        {
+          "case_id": "apple_net_sales_change_2023",
+          "query": "How did Apple's total net sales change from 2022 to 2023?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "multi_period",
+          "latency_ms": 44.6735290001925
+        },
+        {
+          "case_id": "jpmorgan_net_income_change_2025",
+          "query": "How did JPMorgan Chase's net income change from 2024 to 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "multi_period",
+          "latency_ms": 46.864840000125696
+        },
+        {
+          "case_id": "nvidia_revenue_growth_2026",
+          "query": "How much did NVIDIA's revenue grow from fiscal 2025 to fiscal 2026?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "multi_period",
+          "latency_ms": 44.194017999870994
+        },
+        {
+          "case_id": "microsoft_vs_nvidia_net_income_2025",
+          "query": "Which company had higher net income in fiscal 2025, Microsoft or NVIDIA?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "microsoft": null,
+            "nvidia": null
+          },
+          "category": "comparison",
+          "latency_ms": 43.55420299998514
+        },
+        {
+          "case_id": "apple_vs_microsoft_rd",
+          "query": "Compare Apple's R&D expense in 2023 with Microsoft's R&D expense in fiscal 2024.",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "apple": 4,
+            "microsoft": null
+          },
+          "category": "comparison",
+          "latency_ms": 47.064786000191816
+        },
+        {
+          "case_id": "apple_vs_microsoft_employees_2025",
+          "query": "How many full-time employees did Apple and Microsoft each have in 2025?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "apple": 4,
+            "microsoft": 7
+          },
+          "category": "comparison",
+          "latency_ms": 44.52077599989934
+        }
+      ]
+    },
+    "hybrid_rerank": {
+      "summary": {
+        "cases": 40,
+        "recall_at_5": 0.6375,
+        "recall_at_10": 0.675,
+        "mrr": 0.48343253968253974,
+        "latency_p50_ms": 3735.589684499928,
+        "latency_p95_ms": 5734.034991200127
+      },
+      "by_category": {
+        "comparison": {
+          "cases": 3,
+          "recall_at_5": 0.5,
+          "recall_at_10": 0.6666666666666666,
+          "mrr": 0.7037037037037037,
+          "latency_p50_ms": 4271.401575999789,
+          "latency_p95_ms": 4700.971468000125
+        },
+        "multi_period": {
+          "cases": 3,
+          "recall_at_5": 1.0,
+          "recall_at_10": 1.0,
+          "mrr": 0.4166666666666667,
+          "latency_p50_ms": 4516.528076000213,
+          "latency_p95_ms": 8276.417444600338
+        },
+        "narrative": {
+          "cases": 7,
+          "recall_at_5": 0.8571428571428571,
+          "recall_at_10": 0.8571428571428571,
+          "mrr": 0.7857142857142857,
+          "latency_p50_ms": 3748.485900000105,
+          "latency_p95_ms": 4586.154273899865
+        },
+        "table_numeric": {
+          "cases": 27,
+          "recall_at_5": 0.5555555555555556,
+          "recall_at_10": 0.5925925925925926,
+          "mrr": 0.3880070546737213,
+          "latency_p50_ms": 3409.273070999916,
+          "latency_p95_ms": 5510.4350596001495
+        }
+      },
+      "cases": [
+        {
+          "case_id": "apple_net_income_2023",
+          "query": "What was Apple's net income in 2023?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 3335.1131680001345
+        },
+        {
+          "case_id": "apple_cash_2023",
+          "query": "How much cash and cash equivalents did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3722.6934689997506
+        },
+        {
+          "case_id": "apple_marketable_securities_2023",
+          "query": "How much current marketable securities did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3291.324761999931
+        },
+        {
+          "case_id": "apple_inventories_2023",
+          "query": "What were Apple's inventories in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3187.764412999968
+        },
+        {
+          "case_id": "apple_term_debt_due_2024",
+          "query": "How much term debt principal was due in 2024 for Apple?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3086.3115419997484
+        },
+        {
+          "case_id": "apple_long_lived_assets_china_2023",
+          "query": "How much long-lived assets did Apple have in China in 2023?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 3089.9888939998164
+        },
+        {
+          "case_id": "apple_cash_flow_net_income_2023",
+          "query": "What net income amount was reported in Apple's 2023 cash flow statement?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 4348.504898000101
+        },
+        {
+          "case_id": "apple_rd_2023",
+          "query": "How much did Apple spend on research and development in 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 3324.6684060000007
+        },
+        {
+          "case_id": "apple_net_sales_2022",
+          "query": "What were Apple's total net sales in 2022?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 3211.6509309998946
+        },
+        {
+          "case_id": "apple_net_income_2022",
+          "query": "What was Apple's net income in 2022?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 3400.37890099984
+        },
+        {
+          "case_id": "apple_net_sales_2025",
+          "query": "What were Apple's total net sales in fiscal 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 3400.0805649998256
+        },
+        {
+          "case_id": "apple_net_income_2025",
+          "query": "What was Apple's net income in fiscal 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 3409.273070999916
+        },
+        {
+          "case_id": "microsoft_net_income_2023",
+          "query": "What was Microsoft's net income in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3528.0628360001174
+        },
+        {
+          "case_id": "microsoft_net_income_2024",
+          "query": "What was Microsoft's net income in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2049.062364999827
+        },
+        {
+          "case_id": "microsoft_net_income_2025",
+          "query": "What was Microsoft's net income in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 3565.7562669998697
+        },
+        {
+          "case_id": "microsoft_revenue_2023",
+          "query": "What was Microsoft's revenue in fiscal 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2304.012954999962
+        },
+        {
+          "case_id": "microsoft_revenue_2025",
+          "query": "What was Microsoft's revenue in fiscal 2025?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2439.7313659997053
+        },
+        {
+          "case_id": "microsoft_rd_2024",
+          "query": "How much did Microsoft spend on research and development in fiscal 2024?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "table_numeric",
+          "latency_ms": 2467.880353000055
+        },
+        {
+          "case_id": "jpmorgan_net_income_2024",
+          "query": "What was JPMorgan Chase's net income in 2024?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 5258.348268000191
+        },
+        {
+          "case_id": "jpmorgan_net_income_2025",
+          "query": "What was JPMorgan Chase's net income in 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 5618.472256000132
+        },
+        {
+          "case_id": "jpmorgan_total_assets_2025",
+          "query": "What were JPMorgan Chase's total assets in 2025?",
+          "relevant_rank": 7,
+          "group_ranks": {
+            "default": 7
+          },
+          "category": "table_numeric",
+          "latency_ms": 4759.472041999743
+        },
+        {
+          "case_id": "jpmorgan_cet1_2024",
+          "query": "What was JPMorgan Chase's CET1 capital ratio at the end of 2024?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "table_numeric",
+          "latency_ms": 7929.726960000153
+        },
+        {
+          "case_id": "jpmorgan_deposits_2025",
+          "query": "How much in deposits did JPMorgan Chase have at the end of 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 4680.1240230001895
+        },
+        {
+          "case_id": "nvidia_net_income_2025",
+          "query": "What was NVIDIA's net income in fiscal 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 3996.059053999943
+        },
+        {
+          "case_id": "nvidia_net_income_2026",
+          "query": "What was NVIDIA's net income in fiscal 2026?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 4416.266106999956
+        },
+        {
+          "case_id": "nvidia_revenue_2026",
+          "query": "What was NVIDIA's revenue in fiscal 2026?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "table_numeric",
+          "latency_ms": 4469.410681000227
+        },
+        {
+          "case_id": "nvidia_data_center_revenue_2025",
+          "query": "What was NVIDIA's Data Center revenue in fiscal 2025?",
+          "relevant_rank": 3,
+          "group_ranks": {
+            "default": 3
+          },
+          "category": "table_numeric",
+          "latency_ms": 4407.313290999809
+        },
+        {
+          "case_id": "apple_international_trade_risk",
+          "query": "What risks does Apple face from restrictions on international trade?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 3748.485900000105
+        },
+        {
+          "case_id": "nvidia_export_controls",
+          "query": "How have U.S. export controls affected NVIDIA's ability to sell to China?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "narrative",
+          "latency_ms": 3956.0422599997764
+        },
+        {
+          "case_id": "microsoft_openai_partnership",
+          "query": "What is Microsoft's relationship with OpenAI?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 3511.0039890000735
+        },
+        {
+          "case_id": "jpmorgan_operational_risk",
+          "query": "How does JPMorgan Chase describe operational risk?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 4403.391121999903
+        },
+        {
+          "case_id": "apple_employees_2023",
+          "query": "How many full-time equivalent employees did Apple have in 2023?",
+          "relevant_rank": null,
+          "group_ranks": {
+            "default": null
+          },
+          "category": "narrative",
+          "latency_ms": 4664.481338999849
+        },
+        {
+          "case_id": "microsoft_employees_2025",
+          "query": "How many people did Microsoft employ as of June 30, 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 2424.9566700000287
+        },
+        {
+          "case_id": "microsoft_cloud_revenue_2025",
+          "query": "How much Microsoft Cloud revenue did Microsoft report in fiscal 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "default": 1
+          },
+          "category": "narrative",
+          "latency_ms": 2589.33458599995
+        },
+        {
+          "case_id": "apple_net_sales_change_2023",
+          "query": "How did Apple's total net sales change from 2022 to 2023?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "multi_period",
+          "latency_ms": 4516.528076000213
+        },
+        {
+          "case_id": "jpmorgan_net_income_change_2025",
+          "query": "How did JPMorgan Chase's net income change from 2024 to 2025?",
+          "relevant_rank": 2,
+          "group_ranks": {
+            "default": 2
+          },
+          "category": "multi_period",
+          "latency_ms": 8694.182930000352
+        },
+        {
+          "case_id": "nvidia_revenue_growth_2026",
+          "query": "How much did NVIDIA's revenue grow from fiscal 2025 to fiscal 2026?",
+          "relevant_rank": 4,
+          "group_ranks": {
+            "default": 4
+          },
+          "category": "multi_period",
+          "latency_ms": 4322.224257000016
+        },
+        {
+          "case_id": "microsoft_vs_nvidia_net_income_2025",
+          "query": "Which company had higher net income in fiscal 2025, Microsoft or NVIDIA?",
+          "relevant_rank": 9,
+          "group_ranks": {
+            "microsoft": null,
+            "nvidia": 9
+          },
+          "category": "comparison",
+          "latency_ms": 4168.873335999706
+        },
+        {
+          "case_id": "apple_vs_microsoft_rd",
+          "query": "Compare Apple's R&D expense in 2023 with Microsoft's R&D expense in fiscal 2024.",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "apple": 1,
+            "microsoft": null
+          },
+          "category": "comparison",
+          "latency_ms": 4748.701456000163
+        },
+        {
+          "case_id": "apple_vs_microsoft_employees_2025",
+          "query": "How many full-time employees did Apple and Microsoft each have in 2025?",
+          "relevant_rank": 1,
+          "group_ranks": {
+            "apple": 2,
+            "microsoft": 1
+          },
+          "category": "comparison",
+          "latency_ms": 4271.401575999789
+        }
+      ]
+    }
+  }
+}

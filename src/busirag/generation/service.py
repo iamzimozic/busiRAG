@@ -1,3 +1,4 @@
+from busirag.errors import BusiragError, GenerationError
 from busirag.generation.base import LLMProvider
 from busirag.generation.context import build_context
 from busirag.generation.prompts import SYSTEM_PROMPT, build_user_prompt
@@ -25,10 +26,17 @@ class GenerationService:
             context=context,
         )
 
-        generated_answer = self.llm.generate(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt=user_prompt,
-        )
+        try:
+            generated_answer = self.llm.generate(
+                system_prompt=SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+            )
+        except BusiragError:
+            raise
+        except Exception as exc:
+            raise GenerationError(
+                f"LLM provider failed: {type(exc).__name__}: {exc}"
+            ) from exc
 
         valid_citation_ids = {
             item.citation_id for item in context_items
@@ -39,7 +47,7 @@ class GenerationService:
         )
 
         if invalid_citations:
-            raise ValueError(
+            raise GenerationError(
                 f"LLM returned invalid citations: {sorted(invalid_citations)}"
             )
 
@@ -52,4 +60,5 @@ class GenerationService:
         return RAGResponse(
             answer=generated_answer.answer,
             sources=sources,
+            retrieved=context_items,
         )

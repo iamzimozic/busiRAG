@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Computed, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -161,6 +161,10 @@ class Chunk(Base):
 
     search_vector: Mapped[str | None] = mapped_column(
         TSVECTOR,
+        Computed(
+            "to_tsvector('english', text)",
+            persisted=True,
+        ),
         nullable=True,
     )
 

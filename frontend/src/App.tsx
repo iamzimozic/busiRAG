@@ -1,6 +1,9 @@
 import Auth from "./Auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import DiagnosticsPanel from "./components/DiagnosticsPanel";
+import SourceList from "./components/SourceList";
+import { DEMO_MODE, MAX_QUERY_LENGTH } from "./config";
 import {
   deleteDocument,
   getWorkspace,
@@ -8,6 +11,7 @@ import {
   listDocuments,
   queryRAG,
   uploadDocument,
+  type Diagnostics,
   type Document,
   type Source,
   type Workspace,
@@ -23,7 +27,16 @@ type AssistantMessage = {
   role: "assistant";
   content: string;
   sources: Source[];
+  diagnostics: Diagnostics | null;
 };
+
+// Retrieved in the top results with and without the reranker
+// (see docs/DEMO_QUESTIONS.md).
+const SUGGESTED_QUESTIONS = [
+  "What was Apple's net income in 2023?",
+  "How did Apple's total net sales change from 2022 to 2023?",
+  "What is Microsoft's relationship with OpenAI?",
+];
 
 type Message = UserMessage | AssistantMessage;
 
@@ -36,6 +49,8 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedQuery, setFailedQuery] = useState<string | null>(null);
+  const conversationEndRef = useRef<HTMLDivElement | null>(null);
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -57,6 +72,13 @@ function App() {
   const [authenticated, setAuthenticated] = useState(
     () => Boolean(localStorage.getItem("access_token")),
   );
+
+  useEffect(() => {
+    conversationEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, loading, error]);
 
   useEffect(() => {
     function handleAuthExpired() {
@@ -142,24 +164,19 @@ function App() {
   }
 
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function runQuery(trimmedQuery: string, isRetry = false) {
+    if (!isRetry) {
+      const userMessage: UserMessage = {
+        role: "user",
+        content: trimmedQuery,
+      };
 
-    const trimmedQuery = query.trim();
-
-    if (!trimmedQuery || loading) {
-      return;
+      setMessages((current) => [...current, userMessage]);
     }
 
-    const userMessage: UserMessage = {
-      role: "user",
-      content: trimmedQuery,
-    };
-
-    setMessages((current) => [...current, userMessage]);
-    setQuery("");
     setLoading(true);
     setError(null);
+    setFailedQuery(null);
 
     try {
       const result = await queryRAG(trimmedQuery);
@@ -168,6 +185,7 @@ function App() {
         role: "assistant",
         content: result.answer,
         sources: result.sources,
+        diagnostics: result.diagnostics ?? null,
       };
 
       setMessages((current) => [...current, assistantMessage]);
@@ -177,9 +195,23 @@ function App() {
           ? err.message
           : "Something went wrong while querying BusiRAG.",
       );
+      setFailedQuery(trimmedQuery);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery || loading) {
+      return;
+    }
+
+    setQuery("");
+    await runQuery(trimmedQuery);
   }
 
   async function handleUpload(event: React.FormEvent) {
@@ -346,32 +378,15 @@ async function handleDelete(documentId: number) {
                       </p>
 
                       <div className="suggested-questions">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQuery("What are the key financial highlights?")
-                          }
-                        >
-                          What are the key financial highlights?
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQuery("What are the main risks mentioned in the documents?")
-                          }
-                        >
-                          What are the main risks mentioned?
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQuery("What are the company's growth priorities?")
-                          }
-                        >
-                          What are the company's growth priorities?
-                        </button>
+                        {SUGGESTED_QUESTIONS.map((suggestion) => (
+                          <button
+                            type="button"
+                            key={suggestion}
+                            onClick={() => setQuery(suggestion)}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -391,53 +406,50 @@ async function handleDelete(documentId: number) {
                             {message.content}
                           </div>
 
-                          {message.role === "assistant" &&
-                            message.sources.length > 0 && (
-                              <div className="sources">
-                                <div className="sources-title">Sources</div>
+                          {message.role === "assistant" && (
+                            <>
+                              <SourceList sources={message.sources} />
 
-                                <div className="source-list">
-                                  {message.sources.map((source) => (
-                                    <div
-                                      className="source"
-                                      key={`${source.citation_id}-${source.chunk_id}`}
-                                    >
-                                      <div className="source-citation">
-                                        {source.citation_id}
-                                      </div>
-
-                                      <div className="source-details">
-                                        <strong>{source.filename}</strong>
-                                        <span>
-                                          {source.company} · {source.year}
-                                          {source.page_number !== null
-                                            ? ` · Page ${source.page_number}`
-                                            : ""}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                              {message.diagnostics && (
+                                <DiagnosticsPanel
+                                  diagnostics={message.diagnostics}
+                                />
+                              )}
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
 
                   {loading && (
-                    <div className="loading-state">
+                    <div
+                      className="loading-state inline"
+                      role="status"
+                      aria-live="polite"
+                    >
                       <div className="loading-spinner" />
-                      <p>Searching your knowledge base...</p>
+                      <p>Searching documents and drafting an answer…</p>
                     </div>
                   )}
 
                   {error && (
-                    <div className="error-state">
-                      <h3>Something went wrong</h3>
+                    <div className="error-state inline" role="alert">
+                      <h3>Couldn't get an answer</h3>
                       <p>{error}</p>
+                      {failedQuery && (
+                        <button
+                          type="button"
+                          className="retry-button"
+                          onClick={() => runQuery(failedQuery, true)}
+                        >
+                          Try again
+                        </button>
+                      )}
                     </div>
                   )}
+
+                  <div ref={conversationEndRef} />
                 </div>
 
                 <form className="input-area" onSubmit={handleSubmit}>
@@ -447,8 +459,15 @@ async function handleDelete(documentId: number) {
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Ask a question..."
                     aria-label="Ask a question"
+                    maxLength={MAX_QUERY_LENGTH}
                     disabled={loading}
                   />
+
+                  {query.length > MAX_QUERY_LENGTH * 0.8 && (
+                    <span className="query-counter" aria-live="polite">
+                      {query.length}/{MAX_QUERY_LENGTH}
+                    </span>
+                  )}
 
                   <button
                     className="send-button"
@@ -464,89 +483,96 @@ async function handleDelete(documentId: number) {
 
           {page === "documents" && (
             <div className="documents-page">
-              <div className="upload-card">
-                <div className="upload-header">
-                  <div>
-                    <p className="eyebrow">Knowledge Base</p>
-                    <h3>Upload a document</h3>
-                    <p>Add a PDF or DOCX to your knowledge base.</p>
-                  </div>
+              {DEMO_MODE ? (
+                <div className="demo-notice">
+                  This is a read-only demo workspace. Uploading and deleting
+                  documents is disabled.
                 </div>
-
-                <form className="upload-form" onSubmit={handleUpload}>
-                  <label
-                    className={`file-dropzone ${isDragging ? "dragging" : ""}`}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      setIsDragging(false);
-                      setSelectedFile(event.dataTransfer.files?.[0] ?? null);
-                    }}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf,.docx"
-                      onChange={(event) =>
-                        setSelectedFile(event.target.files?.[0] ?? null)
-                      }
-                    />
-
-                    <span className="file-dropzone-icon">↑</span>
-
-                    {selectedFile ? (
-                      <>
-                        <strong>{selectedFile.name}</strong>
-                        <small>Ready to upload</small>
-                      </>
-                    ) : (
-                      <>
-                        <strong>Choose a PDF or DOCX</strong>
-                        <small>Click to browse your files</small>
-                      </>
-                    )}
-                  </label>
-
-                  <label>
-                    <span>Company</span>
-                    <input
-                      type="text"
-                      value={company}
-                      onChange={(event) => setCompany(event.target.value)}
-                      placeholder="e.g. apple"
-                    />
-                  </label>
-
-                  <label>
-                    <span>Year</span>
-                    <input
-                      type="number"
-                      value={year}
-                      onChange={(event) => setYear(event.target.value)}
-                      placeholder="e.g. 2026"
-                      min="1900"
-                      max="2100"
-                    />
-                  </label>
-
-                  <button
-                    className="send-button upload-button"
-                    type="submit"
-                    disabled={uploading}
-                  >
-                    {uploading ? "Uploading..." : "Upload document"}
-                  </button>
-                </form>
-
-                {uploadMessage && (
-                  <div className="upload-message">
-                    {uploadMessage}
+              ) : (
+                <div className="upload-card">
+                  <div className="upload-header">
+                    <div>
+                      <p className="eyebrow">Knowledge Base</p>
+                      <h3>Upload a document</h3>
+                      <p>Add a PDF or DOCX to your knowledge base.</p>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  <form className="upload-form" onSubmit={handleUpload}>
+                    <label
+                      className={`file-dropzone ${isDragging ? "dragging" : ""}`}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        setIsDragging(false);
+                        setSelectedFile(event.dataTransfer.files?.[0] ?? null);
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,.docx"
+                        onChange={(event) =>
+                          setSelectedFile(event.target.files?.[0] ?? null)
+                        }
+                      />
+
+                      <span className="file-dropzone-icon">↑</span>
+
+                      {selectedFile ? (
+                        <>
+                          <strong>{selectedFile.name}</strong>
+                          <small>Ready to upload</small>
+                        </>
+                      ) : (
+                        <>
+                          <strong>Choose a PDF or DOCX</strong>
+                          <small>Click to browse your files</small>
+                        </>
+                      )}
+                    </label>
+
+                    <label>
+                      <span>Company</span>
+                      <input
+                        type="text"
+                        value={company}
+                        onChange={(event) => setCompany(event.target.value)}
+                        placeholder="e.g. apple"
+                      />
+                    </label>
+
+                    <label>
+                      <span>Year</span>
+                      <input
+                        type="number"
+                        value={year}
+                        onChange={(event) => setYear(event.target.value)}
+                        placeholder="e.g. 2026"
+                        min="1900"
+                        max="2100"
+                      />
+                    </label>
+
+                    <button
+                      className="send-button upload-button"
+                      type="submit"
+                      disabled={uploading}
+                    >
+                      {uploading ? "Uploading..." : "Upload document"}
+                    </button>
+                  </form>
+
+                  {uploadMessage && (
+                    <div className="upload-message">
+                      {uploadMessage}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="welcome">
                 <p className="eyebrow">Knowledge Base</p>
                 <h2>Your documents.</h2>
@@ -609,7 +635,9 @@ async function handleDelete(documentId: number) {
                         <div className="document-year">
                           {document.year}
                         </div>
-                        {deletingDocumentId === document.id ? (
+                        {DEMO_MODE ? (
+                          <span />
+                        ) : deletingDocumentId === document.id ? (
                           <div className="delete-confirmation">
                             <span>Delete?</span>
 
