@@ -324,3 +324,57 @@ def test_rag_service_logs_cache_miss_metrics(monkeypatch):
     assert metrics.generation_ms >= 0
     assert metrics.total_ms >= 0
     assert metrics.source_count == 0
+
+def test_rag_service_uses_configured_retrieval_mode(monkeypatch):
+    import busirag.rag.service as rag_service_module
+
+    calls = []
+
+    def fake_retrieve_chunks(**kwargs):
+        calls.append(kwargs)
+        return []
+
+    def fail_reranked(**kwargs):
+        raise AssertionError("reranked retrieval should not run")
+
+    monkeypatch.setattr(
+        rag_service_module,
+        "retrieve_chunks",
+        fake_retrieve_chunks,
+    )
+    monkeypatch.setattr(
+        rag_service_module,
+        "retrieve_reranked_chunks",
+        fail_reranked,
+    )
+
+    class FakeCache:
+        def __init__(self):
+            self.keys = []
+
+        def get(self, key):
+            self.keys.append(key)
+            return None
+
+        def set(self, key, value, ttl):
+            pass
+
+    cache = FakeCache()
+
+    service = RAGService(
+        embedding_provider=object(),
+        reranker=None,
+        generation_service=GenerationService(MockLLMProvider()),
+        cache=cache,
+        retrieval_mode="hybrid",
+    )
+
+    result = service.query(
+        session=None,
+        query="What was Apple's revenue?",
+        tenant_id=1,
+    )
+
+    assert result.answer == "MOCK ANSWER"
+    assert calls[0]["mode"] == "hybrid"
+    assert "retrieval=hybrid:" in cache.keys[0]

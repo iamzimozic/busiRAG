@@ -19,6 +19,8 @@ class RerankedRetrievalResult:
     section: str | None
     element_type: str
     score: float
+    # Hybrid (RRF) score the candidate had before reranking.
+    retrieval_score: float | None = None
 
 
 def retrieve_reranked_chunks(
@@ -76,6 +78,7 @@ def retrieve_reranked_chunks(
             section=candidates[index].section,
             element_type=candidates[index].element_type,
             score=score,
+            retrieval_score=candidates[index].score,
         )
         for index, score in ranked
     ]

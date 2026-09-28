@@ -279,6 +279,18 @@ TOP_K=10
 
 **Never commit `.env` or API keys.**
 
+#### Choosing a generation provider
+
+Retrieval always runs locally; only answer generation uses an LLM. Select it with `LLM_PROVIDER` (default `gemini`):
+
+| Provider | Settings | Notes |
+|---|---|---|
+| `gemini` | `GEMINI_API_KEY`, `GEMINI_MODEL` | Default; native structured output |
+| `openai` | `OPENAI_API_KEY`, `OPENAI_MODEL` (default `gpt-4.1-mini`), optional `OPENAI_BASE_URL` | Native structured output; `OPENAI_BASE_URL` works with any OpenAI-compatible API |
+| `ollama` | `OLLAMA_MODEL` (default `qwen2.5:7b`), `OLLAMA_BASE_URL` (default `http://localhost:11434/v1`) | Fully local, no API key; JSON mode + validated parsing |
+
+All providers return the same structured answer and citations and are validated identically. The provider and model are part of the cache key. From the Docker `api` container, reach an Ollama server on the host with `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`.
+
 ### 4. Start infrastructure
 
 ```bash
@@ -335,11 +347,27 @@ Example:
 
 ```bash
 curl -X POST http://localhost:8000/query \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"query":"What was the company revenue in the latest annual report?"}'
+  -d '{"query":"What was Apple's net income in 2023?"}'
 ```
 
-The response contains the generated answer and the retrieved supporting sources.
+`$TOKEN` comes from `POST /auth/login`. The response contains:
+
+- `answer` — the generated answer
+- `sources` — the cited chunks: document, company, year, page, section, chunk text, retrieval score and reranker score
+- `diagnostics` — request id, cache hit/miss, retrieval mode, generation model, a latency breakdown (`retrieval_ms`, `generation_ms`, `total_ms`) and every retrieved chunk with its scores and whether it was cited
+
+### Frontend
+
+A React + TypeScript UI lives in `frontend/`: ask questions, expand citations to read the source chunk, and open a diagnostics panel with retrieval/reranker scores, cache status and latency.
+
+```bash
+cd frontend
+cp .env.example .env.local   # set VITE_API_BASE_URL if the API is not on 127.0.0.1:8000
+npm install
+npm run dev                   # http://localhost:5173
+```
 
 ### Health
 
@@ -382,6 +410,34 @@ data/evaluation/retrieval.json
 ```
 
 Retrieval evaluation is kept separate from the implementation so that retrieval changes can be measured against a fixed set of expected results instead of being judged only by individual examples.
+
+Relevant chunks are identified by company, year and text anchors (e.g. `["net income", "96,995"]`) rather than database ids, so labels survive re-ingestion. Each case has a category (`table_numeric`, `narrative`, `multi_period`, `comparison`); comparison cases require evidence from every company involved.
+
+Run the ablation across all retrieval modes (dense, sparse, hybrid, hybrid + reranker):
+
+```bash
+python scripts/evaluate_ablation.py
+```
+
+It reports Recall@5, Recall@10, MRR and p50/p95 retrieval latency per mode and per category, and writes `data/evaluation/results/retrieval_ablation.json` and `retrieval_ablation.md`. The retrieval mode used by the API is set with `RETRIEVAL_MODE` (default `hybrid_rerank`).
+
+### Answer evaluation
+
+`data/evaluation/answers.json` holds end-to-end cases (copy `answers.template.json` to add your own). Each generated answer is checked for:
+
+- **Numeric accuracy** — the expected figure in the right units (`$96,995 million` and `$97.0 billion` both pass; `$96,995` is a unit error)
+- **Citation support** — every cited-evidence requirement is met by a cited chunk that matches the evidence spec or states the expected figure for the right company
+- **Refusals** — unanswerable questions are declined, answerable ones are not
+
+The checks are unit-tested with a scripted mock provider. Running against the real provider is a separate, explicit step because it calls the LLM API once per case:
+
+```bash
+python scripts/evaluate_answers.py                      # all cases
+python scripts/evaluate_answers.py --ids apple_net_income_2023 --sleep 5
+pytest -m integration tests/test_answer_evaluation_integration.py
+```
+
+Results are written to `data/evaluation/results/answer_eval.json` and `answer_eval.md`.
 
 ## CI/CD
 

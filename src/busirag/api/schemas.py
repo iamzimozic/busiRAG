@@ -22,11 +22,45 @@ class SourceResponse(BaseModel):
     year: int
     page_number: int | None
     chunk_id: int
+    section: str | None = None
+    element_type: str | None = None
+    text: str | None = None
+    retrieval_score: float | None = None
+    rerank_score: float | None = None
+
+
+class RetrievedChunkResponse(BaseModel):
+    citation_id: str
+    chunk_id: int
+    company: str
+    filename: str
+    year: int
+    page_number: int | None
+    element_type: str
+    retrieval_score: float | None
+    rerank_score: float | None
+    cited: bool
+
+
+class TimingsResponse(BaseModel):
+    retrieval_ms: float
+    generation_ms: float
+    total_ms: float
+
+
+class DiagnosticsResponse(BaseModel):
+    request_id: str
+    cache_hit: bool
+    retrieval_mode: str
+    generation_model: str | None
+    timings: TimingsResponse
+    retrieved: list[RetrievedChunkResponse]
 
 
 class QueryResponse(BaseModel):
     answer: str
     sources: list[SourceResponse]
+    diagnostics: DiagnosticsResponse | None = None
 
 class DocumentResponse(BaseModel):
     id: int

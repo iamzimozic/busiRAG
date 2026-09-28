@@ -1,4 +1,6 @@
-from pydantic import Field
+from typing import Literal
+
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,14 +14,46 @@ class Settings(BaseSettings):
     
     cache_ttl: int = Field(default=3600, ge=1)
 
-    gemini_api_key: str
+    # gemini | openai | ollama (see busirag.generation.factory)
+    llm_provider: Literal["gemini", "openai", "ollama"] = "gemini"
+
+    gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
+
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-4.1-mini"
+    openai_base_url: str | None = None
+
+    ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_model: str = "qwen2.5:7b"
 
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
+    # dense | sparse | hybrid | hybrid_rerank (see busirag.retrieval.modes)
+    retrieval_mode: Literal[
+        "dense", "sparse", "hybrid", "hybrid_rerank"
+    ] = "hybrid_rerank"
+
     candidate_k: int = Field(default=50, ge=1)
     top_k: int = Field(default=10, ge=1)
+
+    @model_validator(mode="after")
+    def require_provider_api_key(self) -> "Settings":
+        required_keys = {
+            "gemini": "gemini_api_key",
+            "openai": "openai_api_key",
+        }
+
+        key_name = required_keys.get(self.llm_provider)
+
+        if key_name is not None and not getattr(self, key_name):
+            raise ValueError(
+                f"{key_name.upper()} is required when "
+                f"LLM_PROVIDER={self.llm_provider}"
+            )
+
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -35,8 +35,9 @@ joblib==1.6.0
 jsonpatch==1.33
 jsonpointer==3.1.1
 langchain==1.3.18
-langchain-core==1.6.1
+langchain-core==1.6.5
 langchain-google-genai==4.4.0
+langchain-openai==1.6.6
 langchain-protocol==0.0.19
 langgraph==1.2.11
 langgraph-checkpoint==4.2.0
@@ -127,3 +128,7 @@ prometheus-client
 
 PyJWT==2.14.0
 pwdlib==0.3.1
+openai==3.20.0
+tiktoken==0.14.0
+jiter==0.17.0
+jiter==0.17.0

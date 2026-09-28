@@ -38,6 +38,9 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://busirag:busirag@postgres:5432/busirag
       REDIS_URL: redis://redis:6379/0
+    extra_hosts:
+      # Lets LLM_PROVIDER=ollama reach an Ollama server on the host.
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

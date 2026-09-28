@@ -15,6 +15,21 @@ class ContextItem:
     section: str | None
     element_type: str
     text: str
+    retrieval_score: float | None = None
+    rerank_score: float | None = None
+
+
+def _scores(result) -> tuple[float | None, float | None]:
+    """(retrieval_score, rerank_score) for any retrieval result type."""
+
+    if hasattr(result, "retrieval_score"):
+        return result.retrieval_score, result.score
+
+    if hasattr(result, "similarity"):
+        return result.similarity, None
+
+    return getattr(result, "score", None), None
+
 
 def build_context(results: list[RetrievalResult]) -> list[ContextItem]:
     return [
@@ -29,6 +44,8 @@ def build_context(results: list[RetrievalResult]) -> list[ContextItem]:
             section=result.section,
             element_type=result.element_type,
             text=result.text,
+            retrieval_score=_scores(result)[0],
+            rerank_score=_scores(result)[1],
         )
         for rank, result in enumerate(results, start=1)
     ]

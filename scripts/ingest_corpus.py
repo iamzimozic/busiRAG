@@ -1,30 +1,50 @@
+import argparse
 from pathlib import Path
 
 from busirag.embeddings import LocalEmbeddingProvider
 from busirag.ingestion import ingest_document
 
 
-DATA_ROOT = Path("/app/data/raw")
-
-
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Ingest every PDF/DOCX under <root>/<company>/<year>/."
+        )
+    )
+
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path("data/raw"),
+    )
+
+    parser.add_argument(
+        "--tenant-id",
+        type=int,
+        default=1,
+    )
+
+    args = parser.parse_args()
+
+    data_root = args.root
+
     provider = LocalEmbeddingProvider()
 
     files = sorted(
         path
-        for path in DATA_ROOT.rglob("*")
+        for path in data_root.rglob("*")
         if path.is_file() and path.suffix.lower() in {".pdf", ".docx"}
     )
 
     if not files:
-        raise RuntimeError(f"No supported documents found under {DATA_ROOT}")
+        raise RuntimeError(f"No supported documents found under {data_root}")
 
     total_chunks = 0
 
     print(f"Found {len(files)} documents")
 
     for path in files:
-        relative = path.relative_to(DATA_ROOT)
+        relative = path.relative_to(data_root)
         parts = relative.parts
 
         if len(parts) < 3:
@@ -51,6 +71,8 @@ def main() -> None:
             company=company,
             year=year,
             embedding_provider=provider,
+            tenant_id=args.tenant_id,
+            original_filename=path.name,
         )
 
         total_chunks += chunks

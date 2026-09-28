@@ -8,6 +8,8 @@ def build_query_cache_key(
     embedding_model: str | None,
     candidate_k: int,
     top_k: int,
+    retrieval_mode: str = "hybrid_rerank",
+    generation_model: str | None = None,
 ) -> str:
     normalized_query = " ".join(query.strip().split())
 
@@ -22,5 +24,7 @@ def build_query_cache_key(
         f"embedding={embedding_model}:"
         f"candidate_k={candidate_k}:"
         f"top_k={top_k}:"
+        f"retrieval={retrieval_mode}:"
+        f"llm={generation_model}:"
         f"query={query_hash}"
     )

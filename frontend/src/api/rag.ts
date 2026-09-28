@@ -5,11 +5,43 @@ export interface Source {
   year: number;
   page_number: number | null;
   chunk_id: number;
+  section: string | null;
+  element_type: string | null;
+  text: string | null;
+  retrieval_score: number | null;
+  rerank_score: number | null;
+}
+
+export interface RetrievedChunk {
+  citation_id: string;
+  chunk_id: number;
+  company: string;
+  filename: string;
+  year: number;
+  page_number: number | null;
+  element_type: string;
+  retrieval_score: number | null;
+  rerank_score: number | null;
+  cited: boolean;
+}
+
+export interface Diagnostics {
+  request_id: string;
+  cache_hit: boolean;
+  retrieval_mode: string;
+  generation_model: string | null;
+  timings: {
+    retrieval_ms: number;
+    generation_ms: number;
+    total_ms: number;
+  };
+  retrieved: RetrievedChunk[];
 }
 
 export interface QueryResponse {
   answer: string;
   sources: Source[];
+  diagnostics: Diagnostics | null;
 }
 
 export interface Document {
@@ -19,7 +51,34 @@ export interface Document {
   filename: string;
 }
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"
+).replace(/\/$/, "");
+
+// FastAPI returns {detail: string}, {detail: [{msg}]} for validation
+// errors, and BusiRAG's own handlers return {message}.
+function errorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object") {
+    const body = error as {
+      detail?: string | { msg?: string }[];
+      message?: string;
+    };
+
+    if (typeof body.detail === "string") {
+      return body.detail;
+    }
+
+    if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+      return body.detail[0].msg;
+    }
+
+    if (body.message) {
+      return body.message;
+    }
+  }
+
+  return fallback;
+}
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem("access_token");
@@ -126,7 +185,7 @@ export async function queryRAG(query: string): Promise<QueryResponse> {
     const error = await response.json().catch(() => null);
 
     throw new Error(
-      error?.message || `Request failed with status ${response.status}`,
+      errorMessage(error, `Request failed with status ${response.status}`),
     );
   }
 
