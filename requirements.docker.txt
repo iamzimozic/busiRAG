@@ -27,3 +27,8 @@ transformers==5.16.1
 uvicorn==0.52.4
 openai==3.20.0
 tiktoken==0.14.0
+PyJWT==2.14.0
+pwdlib[argon2]==0.3.1
+argon2-cffi==25.1.0
+argon2-cffi-bindings==26.1.0
+python-multipart==0.0.32

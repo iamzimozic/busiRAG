@@ -127,7 +127,10 @@ redis
 prometheus-client
 
 PyJWT==2.14.0
-pwdlib==0.3.1
+pwdlib[argon2]==0.3.1
+argon2-cffi==25.1.0
+argon2-cffi-bindings==26.1.0
+python-multipart==0.0.32
 openai==3.20.0
 tiktoken==0.14.0
 jiter==0.17.0
