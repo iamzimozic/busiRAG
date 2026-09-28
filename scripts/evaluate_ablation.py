@@ -155,7 +155,7 @@ def main():
             "device": (
                 torch.cuda.get_device_name(0)
                 if torch.cuda.is_available()
-                else "cpu"
+                else f"CPU ({torch.get_num_threads()} torch threads)"
             ),
             "warmup_queries": args.warmup,
         },

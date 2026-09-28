@@ -263,7 +263,7 @@ pip install --no-deps .
 
 ### 3. Configure environment variables
 
-Create `.env` in the project root:
+Copy `.env.example` to `.env` (it lists every setting with its default), or create `.env` in the project root:
 
 ```env
 DATABASE_URL=postgresql+psycopg://busirag:busirag@localhost:5432/busirag
@@ -438,6 +438,10 @@ pytest -m integration tests/test_answer_evaluation_integration.py
 ```
 
 Results are written to `data/evaluation/results/answer_eval.json` and `answer_eval.md`.
+
+## Deployment
+
+[DEPLOYMENT.md](DEPLOYMENT.md) walks through deploying a public, read-only demo on Railway (API + PostgreSQL/pgvector + Redis) with the frontend on a static host, including the measured reranker latency/quality tradeoff for CPU hosting, demo-corpus setup (`scripts/setup_demo.py`) and public-demo protection (`RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PER_DAY`, `MAX_QUERY_LENGTH`, `DEMO_MODE`). Suggested demo questions are in [docs/DEMO_QUESTIONS.md](docs/DEMO_QUESTIONS.md).
 
 ## CI/CD
 

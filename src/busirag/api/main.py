@@ -15,9 +15,13 @@ from busirag.api.dependencies import (
     get_current_tenant_id,
     get_db,
     get_rag_service,
+    get_rate_limiter,
+    get_settings,
+    require_writable_workspace,
     security,
 )
-from busirag.config import Settings
+from busirag.api.rate_limit import RateLimiter
+from busirag.config import ApiSettings, Settings
 from busirag.cache import RedisCache
 from busirag.api.schemas import (
     DiagnosticsResponse,
@@ -46,8 +50,10 @@ from busirag.reranking.local import LocalReranker
 from busirag.config.validation import validate_embedding_configuration
 from busirag.errors import (
     BusiragError,
+    FeatureDisabledError,
     GenerationError,
     InvalidQueryError,
+    RateLimitExceededError,
     RetrievalError,
 )
 from busirag.ingestion import ingest_document
@@ -63,7 +69,15 @@ async def lifespan(app: FastAPI):
     settings = Settings()
     validate_embedding_configuration(settings.embedding_model)
 
+    app.state.settings = settings
+
     cache = RedisCache(settings.redis_url)
+
+    app.state.rate_limiter = RateLimiter(
+        cache.client,
+        per_minute=settings.rate_limit_per_minute,
+        per_day=settings.rate_limit_per_day,
+    )
 
     embedding_provider = LocalEmbeddingProvider(
         model_name=settings.embedding_model,
@@ -71,8 +85,12 @@ async def lifespan(app: FastAPI):
 
     app.state.embedding_provider = embedding_provider
 
-    reranker = LocalReranker(
-        model_name=settings.reranker_model,
+    # Only hybrid_rerank uses the cross-encoder; skipping it saves
+    # memory and startup time on small CPU hosts.
+    reranker = (
+        LocalReranker(model_name=settings.reranker_model)
+        if settings.retrieval_mode == "hybrid_rerank"
+        else None
     )
 
     llm = create_llm_provider(settings)
@@ -111,9 +129,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-    ],
+    allow_origins=ApiSettings().cors_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -185,6 +201,7 @@ def get_current_user(
 def register(
     payload: RegisterRequest,
     session: Session = Depends(get_db),
+    _: None = Depends(require_writable_workspace),
 ) -> RegisterResponse:
     existing_user = session.scalar(
         select(User).where(User.email == payload.email)
@@ -285,6 +302,7 @@ def upload_document(
     year: int = Form(...),
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
+    _: None = Depends(require_writable_workspace),
 ) -> dict[str, object]:
     if not file.filename:
         raise ValueError("filename is required")
@@ -340,6 +358,7 @@ def delete_document(
     document_id: int,
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
+    _: None = Depends(require_writable_workspace),
 ) -> None:
     document = session.scalar(
         select(Document).where(
@@ -434,6 +453,27 @@ async def generation_error_handler(request, exc):
         },
     )
 
+@app.exception_handler(RateLimitExceededError)
+async def rate_limit_handler(request, exc):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limited",
+            "message": str(exc),
+        },
+        headers={"Retry-After": str(exc.retry_after)},
+    )
+
+@app.exception_handler(FeatureDisabledError)
+async def feature_disabled_handler(request, exc):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "error": "feature_disabled",
+            "message": str(exc),
+        },
+    )
+
 @app.exception_handler(BusiragError)
 async def busirag_error_handler(request, exc):
     return JSONResponse(
@@ -451,7 +491,22 @@ def query(
     session: Session = Depends(get_db),
     tenant_id: int = Depends(get_current_tenant_id),
     rag_service: RAGService = Depends(get_rag_service),
+    settings: Settings = Depends(get_settings),
+    rate_limiter: RateLimiter | None = Depends(get_rate_limiter),
 ) -> QueryResponse:
+    if len(request.query) > settings.max_query_length:
+        raise InvalidQueryError(
+            f"query must be at most {settings.max_query_length} characters"
+        )
+
+    if rate_limiter is not None:
+        client_host = (
+            http_request.client.host
+            if http_request.client is not None
+            else "unknown"
+        )
+        rate_limiter.check(client_host)
+
     result = rag_service.query(
         session=session,
         query=request.query,

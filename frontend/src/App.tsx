@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import DiagnosticsPanel from "./components/DiagnosticsPanel";
 import SourceList from "./components/SourceList";
+import { DEMO_MODE, MAX_QUERY_LENGTH } from "./config";
 import {
   deleteDocument,
   getWorkspace,
@@ -29,10 +30,12 @@ type AssistantMessage = {
   diagnostics: Diagnostics | null;
 };
 
+// Retrieved in the top results with and without the reranker
+// (see docs/DEMO_QUESTIONS.md).
 const SUGGESTED_QUESTIONS = [
   "What was Apple's net income in 2023?",
-  "How much did NVIDIA's revenue grow from fiscal 2025 to fiscal 2026?",
-  "What risks does Apple face from restrictions on international trade?",
+  "How did Apple's total net sales change from 2022 to 2023?",
+  "What is Microsoft's relationship with OpenAI?",
 ];
 
 type Message = UserMessage | AssistantMessage;
@@ -456,8 +459,15 @@ async function handleDelete(documentId: number) {
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Ask a question..."
                     aria-label="Ask a question"
+                    maxLength={MAX_QUERY_LENGTH}
                     disabled={loading}
                   />
+
+                  {query.length > MAX_QUERY_LENGTH * 0.8 && (
+                    <span className="query-counter" aria-live="polite">
+                      {query.length}/{MAX_QUERY_LENGTH}
+                    </span>
+                  )}
 
                   <button
                     className="send-button"
@@ -473,89 +483,96 @@ async function handleDelete(documentId: number) {
 
           {page === "documents" && (
             <div className="documents-page">
-              <div className="upload-card">
-                <div className="upload-header">
-                  <div>
-                    <p className="eyebrow">Knowledge Base</p>
-                    <h3>Upload a document</h3>
-                    <p>Add a PDF or DOCX to your knowledge base.</p>
-                  </div>
+              {DEMO_MODE ? (
+                <div className="demo-notice">
+                  This is a read-only demo workspace. Uploading and deleting
+                  documents is disabled.
                 </div>
-
-                <form className="upload-form" onSubmit={handleUpload}>
-                  <label
-                    className={`file-dropzone ${isDragging ? "dragging" : ""}`}
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      setIsDragging(false);
-                      setSelectedFile(event.dataTransfer.files?.[0] ?? null);
-                    }}
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf,.docx"
-                      onChange={(event) =>
-                        setSelectedFile(event.target.files?.[0] ?? null)
-                      }
-                    />
-
-                    <span className="file-dropzone-icon">↑</span>
-
-                    {selectedFile ? (
-                      <>
-                        <strong>{selectedFile.name}</strong>
-                        <small>Ready to upload</small>
-                      </>
-                    ) : (
-                      <>
-                        <strong>Choose a PDF or DOCX</strong>
-                        <small>Click to browse your files</small>
-                      </>
-                    )}
-                  </label>
-
-                  <label>
-                    <span>Company</span>
-                    <input
-                      type="text"
-                      value={company}
-                      onChange={(event) => setCompany(event.target.value)}
-                      placeholder="e.g. apple"
-                    />
-                  </label>
-
-                  <label>
-                    <span>Year</span>
-                    <input
-                      type="number"
-                      value={year}
-                      onChange={(event) => setYear(event.target.value)}
-                      placeholder="e.g. 2026"
-                      min="1900"
-                      max="2100"
-                    />
-                  </label>
-
-                  <button
-                    className="send-button upload-button"
-                    type="submit"
-                    disabled={uploading}
-                  >
-                    {uploading ? "Uploading..." : "Upload document"}
-                  </button>
-                </form>
-
-                {uploadMessage && (
-                  <div className="upload-message">
-                    {uploadMessage}
+              ) : (
+                <div className="upload-card">
+                  <div className="upload-header">
+                    <div>
+                      <p className="eyebrow">Knowledge Base</p>
+                      <h3>Upload a document</h3>
+                      <p>Add a PDF or DOCX to your knowledge base.</p>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  <form className="upload-form" onSubmit={handleUpload}>
+                    <label
+                      className={`file-dropzone ${isDragging ? "dragging" : ""}`}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        setIsDragging(false);
+                        setSelectedFile(event.dataTransfer.files?.[0] ?? null);
+                      }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,.docx"
+                        onChange={(event) =>
+                          setSelectedFile(event.target.files?.[0] ?? null)
+                        }
+                      />
+
+                      <span className="file-dropzone-icon">↑</span>
+
+                      {selectedFile ? (
+                        <>
+                          <strong>{selectedFile.name}</strong>
+                          <small>Ready to upload</small>
+                        </>
+                      ) : (
+                        <>
+                          <strong>Choose a PDF or DOCX</strong>
+                          <small>Click to browse your files</small>
+                        </>
+                      )}
+                    </label>
+
+                    <label>
+                      <span>Company</span>
+                      <input
+                        type="text"
+                        value={company}
+                        onChange={(event) => setCompany(event.target.value)}
+                        placeholder="e.g. apple"
+                      />
+                    </label>
+
+                    <label>
+                      <span>Year</span>
+                      <input
+                        type="number"
+                        value={year}
+                        onChange={(event) => setYear(event.target.value)}
+                        placeholder="e.g. 2026"
+                        min="1900"
+                        max="2100"
+                      />
+                    </label>
+
+                    <button
+                      className="send-button upload-button"
+                      type="submit"
+                      disabled={uploading}
+                    >
+                      {uploading ? "Uploading..." : "Upload document"}
+                    </button>
+                  </form>
+
+                  {uploadMessage && (
+                    <div className="upload-message">
+                      {uploadMessage}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="welcome">
                 <p className="eyebrow">Knowledge Base</p>
                 <h2>Your documents.</h2>
@@ -618,7 +635,9 @@ async function handleDelete(documentId: number) {
                         <div className="document-year">
                           {document.year}
                         </div>
-                        {deletingDocumentId === document.id ? (
+                        {DEMO_MODE ? (
+                          <span />
+                        ) : deletingDocumentId === document.id ? (
                           <div className="delete-confirmation">
                             <span>Delete?</span>
 

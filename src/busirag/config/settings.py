@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     candidate_k: int = Field(default=50, ge=1)
     top_k: int = Field(default=10, ge=1)
 
+    # Public demo protection. 0 disables a limit.
+    max_query_length: int = Field(default=500, ge=1)
+    rate_limit_per_minute: int = Field(default=0, ge=0)
+    rate_limit_per_day: int = Field(default=0, ge=0)
+    # Read-only demo: disables registration and document upload/delete.
+    demo_mode: bool = False
+
     @model_validator(mode="after")
     def require_provider_api_key(self) -> "Settings":
         required_keys = {
@@ -60,3 +67,27 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+
+class ApiSettings(BaseSettings):
+    """
+    Settings needed when the FastAPI app is created (before startup),
+    kept separate so importing the app does not require every secret.
+    """
+
+    # Comma-separated list of allowed browser origins.
+    cors_origins: str = "http://localhost:5173"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [
+            origin.strip().rstrip("/")
+            for origin in self.cors_origins.split(",")
+            if origin.strip()
+        ]

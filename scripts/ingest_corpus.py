@@ -1,34 +1,21 @@
 import argparse
 from pathlib import Path
 
-from busirag.embeddings import LocalEmbeddingProvider
+from busirag.embeddings import EmbeddingProvider, LocalEmbeddingProvider
 from busirag.ingestion import ingest_document
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Ingest every PDF/DOCX under <root>/<company>/<year>/."
-        )
-    )
+def ingest_directory(
+    data_root: Path,
+    tenant_id: int,
+    provider: EmbeddingProvider,
+) -> tuple[int, int]:
+    """
+    Ingest every PDF/DOCX under <data_root>/<company>/<year>/.
 
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=Path("data/raw"),
-    )
-
-    parser.add_argument(
-        "--tenant-id",
-        type=int,
-        default=1,
-    )
-
-    args = parser.parse_args()
-
-    data_root = args.root
-
-    provider = LocalEmbeddingProvider()
+    Already-ingested files (same content hash and pipeline version)
+    are skipped. Returns (documents discovered, new chunks inserted).
+    """
 
     files = sorted(
         path
@@ -71,7 +58,7 @@ def main() -> None:
             company=company,
             year=year,
             embedding_provider=provider,
-            tenant_id=args.tenant_id,
+            tenant_id=tenant_id,
             original_filename=path.name,
         )
 
@@ -79,10 +66,40 @@ def main() -> None:
 
     print()
     print("=" * 70)
-    print(f"Corpus ingestion complete")
+    print("Corpus ingestion complete")
     print(f"Documents discovered: {len(files)}")
     print(f"New chunks inserted: {total_chunks}")
     print("=" * 70)
+
+    return len(files), total_chunks
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Ingest every PDF/DOCX under <root>/<company>/<year>/."
+        )
+    )
+
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=Path("data/raw"),
+    )
+
+    parser.add_argument(
+        "--tenant-id",
+        type=int,
+        default=1,
+    )
+
+    args = parser.parse_args()
+
+    ingest_directory(
+        data_root=args.root,
+        tenant_id=args.tenant_id,
+        provider=LocalEmbeddingProvider(),
+    )
 
 
 if __name__ == "__main__":
