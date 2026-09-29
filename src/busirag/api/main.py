@@ -62,8 +62,15 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import logging
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def initialize_app_state(app: FastAPI) -> None:
+    """
+    Load settings, models and services into app.state.
+
+    Called by the lifespan, and directly by hosts that mount this app
+    inside another ASGI app (mounted apps do not run their lifespan),
+    such as the Hugging Face ZeroGPU entry point.
+    """
+
     settings = Settings()
     validate_embedding_configuration(settings.embedding_model)
 
@@ -92,6 +99,11 @@ async def lifespan(app: FastAPI):
         embedding_provider=embedding_provider,
         generation_budget=rate_limiter,
     )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_app_state(app)
 
     yield
 

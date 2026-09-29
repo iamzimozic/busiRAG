@@ -53,26 +53,33 @@ To add documents later, drop them into `data/raw/` and re-run `setup_demo.py` (a
 
 ### 3. Create the Space
 
-Docker Spaces are not available on the free plan, so the Space uses the **Gradio SDK**: Hugging Face installs `requirements.txt` and runs `python app.py`, and [`deploy/huggingface-gradio/app.py`](deploy/huggingface-gradio/app.py) starts the busiRAG API (serving the prebuilt frontend) instead of a Gradio UI.
+Docker Spaces are not available on the free plan, so the Space uses the **Gradio SDK**, and free accounts may only get **ZeroGPU** hardware. ZeroGPU requires a Gradio app that registers a `@spaces.GPU` function when it launches. [`deploy/huggingface-gradio/app.py`](deploy/huggingface-gradio/app.py) therefore launches a minimal Gradio app (with a placeholder GPU function) and serves busiRAG inside the same server:
 
-1. **Build the frontend** on your machine, with the demo login baked in (same terminal as step 2, so `$DEMO_PASSWORD` is set):
+| Path | Served by |
+|---|---|
+| `/` | Gradio page that immediately redirects to `/busirag/` |
+| `/busirag/` | the busiRAG frontend and API (`/busirag/query`, `/busirag/health`, …) |
+
+busiRAG's models run on CPU (`MODEL_DEVICE=cpu`); the GPU is never used.
+
+1. **Build the frontend** on your machine for the `/busirag/` prefix, with the demo login baked in (same terminal as step 2, so `$DEMO_PASSWORD` is set):
 
    ```bash
    cd frontend
-   VITE_API_BASE_URL= VITE_DEMO_MODE=true \
+   VITE_API_BASE_URL=/busirag VITE_DEMO_MODE=true \
    VITE_DEMO_EMAIL=demo@busirag.app VITE_DEMO_PASSWORD="$DEMO_PASSWORD" \
-   npm run build
+   npm run build -- --base=/busirag/
    cd ..
    ```
 
-   The empty `VITE_API_BASE_URL` makes the page call the API on its own origin.
-2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → public. Pick the free CPU hardware, or **ZeroGPU** if CPU basic is not selectable: busiRAG runs its models on CPU either way (`app.py` sets `MODEL_DEVICE=cpu` and registers the placeholder GPU function ZeroGPU expects), and `requirements.txt` pins a ZeroGPU-supported torch version. Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
+   `--base=/busirag/` makes asset URLs start with `/busirag/`, and `VITE_API_BASE_URL=/busirag` sends API calls to the same prefix.
+2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → public, with the free hardware offered (CPU basic or ZeroGPU; `app.py` works on both, and `requirements.txt` pins a ZeroGPU-supported torch version). Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
 3. Upload to the Space repository root:
    - `deploy/huggingface-gradio/app.py`
    - `deploy/huggingface-gradio/requirements.txt` (installs busiRAG from GitHub; it points at the `portfolio-upgrade` branch, so change `@portfolio-upgrade` to `@main` once merged)
    - the **contents** of `frontend/dist/` into a folder named `dist/` (so the Space has `dist/index.html` and `dist/assets/…`)
 4. In **Settings → Variables and secrets**, add the secrets `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET_KEY` and `GEMINI_API_KEY`, and the variables `RATE_LIMIT_PER_MINUTE=5` and `RATE_LIMIT_PER_DAY` (e.g. `8`). `app.py` already sets `DEMO_MODE=true`, `RETRIEVAL_MODE=hybrid`, `CACHE_TTL=2592000` and trusts the proxy's client-IP header.
-5. The Space installs the requirements (several minutes: PyTorch CPU wheels) and starts at `https://<user>-<space>.hf.space`. The embedding model downloads on first start.
+5. The Space installs the requirements (several minutes: PyTorch wheels) and starts at `https://<user>-<space>.hf.space`, which redirects to `https://<user>-<space>.hf.space/busirag/`. The embedding model downloads on first start. Health check: `https://<user>-<space>.hf.space/busirag/health`.
 
 Migrations are not run by the Space; you already ran `alembic upgrade head` in step 2. Run it again from your machine after pulling changes that add migrations.
 
