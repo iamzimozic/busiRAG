@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
+    # Device for local models ("cpu", "cuda"); unset = automatic.
+    # Set to "cpu" on hosts that report a GPU the app cannot use
+    # directly (e.g. Hugging Face ZeroGPU).
+    model_device: str | None = None
+
     # dense | sparse | hybrid | hybrid_rerank (see busirag.retrieval.modes)
     retrieval_mode: Literal[
         "dense", "sparse", "hybrid", "hybrid_rerank"

@@ -66,7 +66,7 @@ Docker Spaces are not available on the free plan, so the Space uses the **Gradio
    ```
 
    The empty `VITE_API_BASE_URL` makes the page call the API on its own origin.
-2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → free CPU hardware → public. Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
+2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → public. Pick the free CPU hardware, or **ZeroGPU** if CPU basic is not selectable: busiRAG runs its models on CPU either way (`app.py` sets `MODEL_DEVICE=cpu` and registers the placeholder GPU function ZeroGPU expects), and `requirements.txt` pins a ZeroGPU-supported torch version. Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
 3. Upload to the Space repository root:
    - `deploy/huggingface-gradio/app.py`
    - `deploy/huggingface-gradio/requirements.txt` (installs busiRAG from GitHub; it points at the `portfolio-upgrade` branch, so change `@portfolio-upgrade` to `@main` once merged)

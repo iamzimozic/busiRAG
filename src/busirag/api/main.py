@@ -81,6 +81,7 @@ async def lifespan(app: FastAPI):
 
     embedding_provider = LocalEmbeddingProvider(
         model_name=settings.embedding_model,
+        device=settings.model_device,
     )
 
     app.state.embedding_provider = embedding_provider

@@ -13,6 +13,19 @@ Migrations are run from your machine (alembic upgrade head) beforehand.
 import os
 from pathlib import Path
 
+# On ZeroGPU hardware the `spaces` package must be imported before torch,
+# and the Space expects at least one @spaces.GPU function. busiRAG runs
+# its small models on CPU, so this placeholder is never called.
+try:
+    import spaces
+
+    @spaces.GPU
+    def _zerogpu_placeholder() -> None:
+        return None
+
+except ImportError:
+    pass
+
 HERE = Path(__file__).resolve().parent
 
 # Must be set before busirag.api.main is imported (read at import time).
@@ -20,6 +33,8 @@ os.environ.setdefault("FRONTEND_DIST", str(HERE / "dist"))
 os.environ.setdefault("DEMO_MODE", "true")
 os.environ.setdefault("RETRIEVAL_MODE", "hybrid")
 os.environ.setdefault("CACHE_TTL", "2592000")
+# ZeroGPU reports a GPU that is only usable inside @spaces.GPU calls.
+os.environ.setdefault("MODEL_DEVICE", "cpu")
 
 import uvicorn  # noqa: E402
 

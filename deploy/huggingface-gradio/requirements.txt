@@ -3,8 +3,9 @@
 # (fastapi, uvicorn, pydantic, starlette, huggingface_hub) is left
 # unpinned to avoid conflicts with Gradio's own pins.
 
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.14.0+cpu
+# ZeroGPU accepts only specific torch versions (2.13.0 is one of them);
+# the models run on CPU (MODEL_DEVICE=cpu in app.py).
+torch==2.13.0
 
 # busiRAG itself, from GitHub (change the branch after merging to main).
 busirag @ git+https://github.com/iamzimozic/busiRAG.git@portfolio-upgrade

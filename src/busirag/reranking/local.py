@@ -5,8 +5,9 @@ class LocalReranker:
     def __init__(
         self,
         model_name: str = "BAAI/bge-reranker-v2-m3",
+        device: str | None = None,
     ):
-        self.model = CrossEncoder(model_name)
+        self.model = CrossEncoder(model_name, device=device)
 
     def rerank(
         self,

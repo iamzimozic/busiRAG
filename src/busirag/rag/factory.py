@@ -25,12 +25,16 @@ def build_rag_service(
     if embedding_provider is None:
         embedding_provider = LocalEmbeddingProvider(
             model_name=settings.embedding_model,
+            device=settings.model_device,
         )
 
     # Only hybrid_rerank uses the cross-encoder; skipping it saves
     # memory and startup time on small CPU hosts.
     reranker = (
-        LocalReranker(model_name=settings.reranker_model)
+        LocalReranker(
+            model_name=settings.reranker_model,
+            device=settings.model_device,
+        )
         if settings.retrieval_mode == "hybrid_rerank"
         else None
     )
