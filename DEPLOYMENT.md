@@ -2,20 +2,23 @@
 
 Two ways to run a public, read-only demo:
 
-- **[Free deployment](#free-deployment-hugging-face-spaces--neon--upstash)**: Hugging Face Spaces + Neon + Upstash + the Gemini free tier. No credit card; best for a portfolio demo.
+- **[Free deployment](#free-deployment-render--vercel--neon--upstash)**: Render + Vercel + Neon + Upstash + the Gemini free tier. No credit card; best for a portfolio demo.
 - **[Railway](#paid-deployment-railway)**: always-on, more control, usage-based billing.
 
 Both use pre-ingested documents. At query time busiRAG only reads chunk text and embeddings from PostgreSQL and never opens the original files, so **no file or object storage is needed**; the demo answers only from the documents you ingested (the whole 12-report corpus is ~33 MB in PostgreSQL).
 
-## Free deployment (Hugging Face Spaces + Neon + Upstash)
+## Free deployment (Render + Vercel + Neon + Upstash)
 
 | Piece | Free service |
 |---|---|
-| API + frontend (one app, one URL) | [Hugging Face Spaces](https://huggingface.co/spaces), Gradio SDK (runs our FastAPI app), free CPU hardware |
+| API | [Render](https://render.com) free web service (Docker, 512 MB RAM) |
+| Frontend | [Vercel](https://vercel.com) Hobby plan |
 | PostgreSQL + pgvector | [Neon](https://neon.tech) free plan |
 | Redis (answer cache, rate limits) | [Upstash](https://upstash.com) free plan |
 | Answer generation | Gemini API free tier ([Google AI Studio](https://aistudio.google.com) key) |
 | Document ingestion | your own machine, once |
+
+**Fitting in 512 MB.** The regular API image loads PyTorch and uses ~0.93 GB. The Render image (`Dockerfile.render`, `requirements.render.txt`) has no PyTorch: embeddings run with ONNX Runtime (`EMBEDDING_BACKEND=onnx`), the reranker is off (`RETRIEVAL_MODE=hybrid`), and document parsers load only for uploads. Measured locally, the API process uses **~365 MB** after startup. The ONNX model produces the same vectors as the sentence-transformers model used for ingestion (cosine similarity 1.0), and the hybrid benchmark gives identical per-question ranks, so the existing index and cached answers stay valid.
 
 Free-tier limits change; check each provider's current limits. The one that matters most is the **Gemini free quota** (when tested for this project, `gemini-2.5-flash` allowed 20 requests per day). The demo is built around it:
 
@@ -28,7 +31,7 @@ Free-tier limits change; check each provider's current limits. The one that matt
 1. **Neon**: create a project and copy the **direct** connection string (host without `-pooler`; the pooled endpoint does not work well with psycopg's prepared statements). It looks like `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`; busiRAG switches it to the psycopg driver automatically.
 2. **Upstash**: create a Redis database and copy its `rediss://default:…@….upstash.io:6379` URL.
 3. **Google AI Studio**: create a Gemini API key.
-4. **Hugging Face**: create an account.
+4. **Render** and **Vercel**: sign up with GitHub.
 
 ### 2. Load the documents from your machine
 
@@ -44,57 +47,59 @@ export RETRIEVAL_MODE=hybrid CACHE_TTL=2592000
 alembic upgrade head                     # creates the schema and the vector extension
 python scripts/setup_demo.py             # demo user + ingest data/raw
 python scripts/warm_cache.py             # pre-answer docs/demo_questions.txt
-echo "$DEMO_PASSWORD"                    # needed for the Space variables
+echo "$DEMO_PASSWORD"                    # needed for the Vercel variables
 ```
 
-Exported variables override your local `.env`. `warm_cache.py` must run with the same `LLM_PROVIDER`, `GEMINI_MODEL`, `RETRIEVAL_MODE`, `TOP_K`, `CANDIDATE_K` and `EMBEDDING_MODEL` as the Space, because they are all part of the cache key. It uses one Gemini request per uncached question (10 in the default list) and skips questions already cached, so it is safe to re-run on another day if it hits the quota.
+Exported variables override your local `.env`. `warm_cache.py` must run with the same `LLM_PROVIDER`, `GEMINI_MODEL`, `RETRIEVAL_MODE`, `TOP_K`, `CANDIDATE_K` and `EMBEDDING_MODEL` as the Render service, because they are all part of the cache key (the embedding backend is not: ONNX and PyTorch give the same vectors). It uses one Gemini request per uncached question (10 in the default list) and skips questions already cached, so it is safe to re-run on another day if it hits the quota.
 
-To add documents later, drop them into `data/raw/` and re-run `setup_demo.py` (and `warm_cache.py` for new demo questions). The Space does not need a rebuild.
+To add documents later, drop them into `data/raw/` and re-run `setup_demo.py` (and `warm_cache.py` for new demo questions). Nothing needs redeploying.
 
-### 3. Create the Space
+### 3. Deploy the API on Render
 
-Docker Spaces are not available on the free plan, so the Space uses the **Gradio SDK**, and free accounts may only get **ZeroGPU** hardware. ZeroGPU requires a Gradio app that registers a `@spaces.GPU` function when it launches. [`deploy/huggingface-gradio/app.py`](deploy/huggingface-gradio/app.py) therefore launches a minimal Gradio app (with a placeholder GPU function) and serves busiRAG inside the same server:
+[`render.yaml`](render.yaml) is a Render Blueprint describing the service (free plan, `Dockerfile.render`, health check on `/health`, demo settings).
 
-| Path | Served by |
-|---|---|
-| `/` | Gradio page that immediately redirects to `/busirag/` |
-| `/busirag/` | the busiRAG frontend and API (`/busirag/query`, `/busirag/health`, …) |
+1. In Render, **New → Blueprint**, connect the GitHub repository and choose the branch to deploy.
+2. Render reads `render.yaml` and asks for the secret values:
 
-busiRAG's models run on CPU (`MODEL_DEVICE=cpu`); the GPU is never used.
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | the Neon connection string |
+   | `REDIS_URL` | the Upstash URL |
+   | `GEMINI_API_KEY` | your Gemini key |
+   | `CORS_ORIGINS` | your Vercel URL (e.g. `https://busirag.vercel.app`, no trailing slash). If you do not have it yet, enter a placeholder and update it after step 4. |
 
-1. **Build the frontend** on your machine for the `/busirag/` prefix, with the demo login baked in (same terminal as step 2, so `$DEMO_PASSWORD` is set):
+   `JWT_SECRET_KEY` is generated by Render; the other settings (`EMBEDDING_BACKEND=onnx`, `RETRIEVAL_MODE=hybrid`, `DEMO_MODE=true`, rate limits, 30-day cache) come from `render.yaml`.
+3. Apply. The first build takes a few minutes; the service starts at `https://busirag-api.onrender.com` (or similar). Check `https://<service>.onrender.com/health` returns `{"status":"ok"}`. Migrations run at startup and are a no-op once applied.
 
-   ```bash
-   cd frontend
-   VITE_API_BASE_URL=/busirag VITE_DEMO_MODE=true \
-   VITE_DEMO_EMAIL=demo@busirag.app VITE_DEMO_PASSWORD="$DEMO_PASSWORD" \
-   npm run build -- --base=/busirag/
-   cd ..
-   ```
+### 4. Deploy the frontend on Vercel
 
-   `--base=/busirag/` makes asset URLs start with `/busirag/`, and `VITE_API_BASE_URL=/busirag` sends API calls to the same prefix.
-2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → public, with the free hardware offered (CPU basic or ZeroGPU; `app.py` works on both, and `requirements.txt` pins a ZeroGPU-supported torch version). Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
-3. Upload to the Space repository root:
-   - `deploy/huggingface-gradio/app.py`
-   - `deploy/huggingface-gradio/requirements.txt` (installs busiRAG from GitHub; it points at the `portfolio-upgrade` branch, so change `@portfolio-upgrade` to `@main` once merged)
-   - the **contents** of `frontend/dist/` into a folder named `dist/` (so the Space has `dist/index.html` and `dist/assets/…`)
-4. In **Settings → Variables and secrets**, add the secrets `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET_KEY` and `GEMINI_API_KEY`, and the variables `RATE_LIMIT_PER_MINUTE=5` and `RATE_LIMIT_PER_DAY` (e.g. `8`). `app.py` already sets `DEMO_MODE=true`, `RETRIEVAL_MODE=hybrid`, `CACHE_TTL=2592000` and trusts the proxy's client-IP header.
-5. The Space installs the requirements (several minutes: PyTorch wheels) and starts at `https://<user>-<space>.hf.space`, which redirects to `https://<user>-<space>.hf.space/busirag/`. The embedding model downloads on first start. Health check: `https://<user>-<space>.hf.space/busirag/health`.
+The repository has a root [`vercel.json`](vercel.json) that installs and builds from `frontend/` (and `frontend/vercel.json` if you set the Root Directory to `frontend`), so the build settings need no changes.
 
-Migrations are not run by the Space; you already ran `alembic upgrade head` in step 2. Run it again from your machine after pulling changes that add migrations.
+1. In Vercel, **Add New → Project** and import the repository. Leave the Root Directory as it is.
+2. Add **Environment Variables**:
 
-If your account can use Docker Spaces, [`deploy/huggingface/`](deploy/huggingface/) is a Docker alternative that clones the repository and builds the frontend itself (set `VITE_DEMO_EMAIL`, `VITE_DEMO_PASSWORD`, `CACHE_TTL`, `FORWARDED_ALLOW_IPS=*` and `GIT_REF` as Space variables).
+   | Name | Value |
+   |---|---|
+   | `VITE_API_BASE_URL` | `https://<service>.onrender.com` |
+   | `VITE_DEMO_MODE` | `true` |
+   | `VITE_DEMO_EMAIL` | `demo@busirag.app` |
+   | `VITE_DEMO_PASSWORD` | the demo password |
 
-### 4. Verify
+3. Deploy. If the code is not on `main` yet, set the production branch to your branch under **Settings → Git** and redeploy. `VITE_*` variables are baked in at build time, so redeploy after changing them.
+4. Put the Vercel URL into `CORS_ORIGINS` on Render (Environment tab) if you used a placeholder; Render restarts the service.
 
-- Open the Space and click **Try the demo**.
+### 5. Verify
+
+- Open the Vercel URL and click **Try the demo**.
 - Click a suggested question: the diagnostics panel shows **Cache hit** and an instant answer.
 - Ask a new question from [docs/DEMO_QUESTIONS.md](docs/DEMO_QUESTIONS.md): it goes to Gemini and is cached afterwards.
+- A "network error" in the UI usually means `CORS_ORIGINS` on Render does not exactly match the Vercel URL, or the Render service is still waking up.
 
 ### Free-tier behaviour to expect
 
-- **Cold starts**: free Spaces sleep after a period without visitors and Neon suspends idle compute; the first request after a pause takes noticeably longer while both wake up.
-- **Updating code**: push to GitHub, then **Settings → Factory rebuild** on the Space (it reinstalls busiRAG from the branch in `requirements.txt`). Frontend changes need a new `npm run build` and re-uploading `dist/`.
+- **Cold starts**: Render's free services sleep after about 15 minutes without traffic, and Neon suspends idle compute; the first request after a pause can take 30–60 seconds while both wake up.
+- **CPU**: the free instance has a small CPU share, so embedding a new question is slower than locally; cached questions are unaffected.
+- **Updating code**: Render and Vercel redeploy automatically on push to the connected branch.
 - **Read-only**: uploads, deletes and registration are disabled (`DEMO_MODE`), which is also why no file storage is needed.
 
 ## Paid deployment (Railway)

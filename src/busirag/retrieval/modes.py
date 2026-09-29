@@ -3,7 +3,7 @@ from typing import Literal, get_args
 from sqlalchemy.orm import Session
 
 from busirag.embeddings import EmbeddingProvider
-from busirag.reranking import LocalReranker
+from busirag.reranking import Reranker
 from busirag.retrieval.hybrid import retrieve_hybrid_chunks
 from busirag.retrieval.reranked import retrieve_reranked_chunks
 from busirag.retrieval.sparse import retrieve_sparse_chunks
@@ -22,7 +22,7 @@ def retrieve_chunks(
     query: str,
     tenant_id: int,
     embedding_provider: EmbeddingProvider | None = None,
-    reranker: LocalReranker | None = None,
+    reranker: Reranker | None = None,
     top_k: int = 10,
     candidate_k: int = 50,
     chunking_version: str | None = None,

@@ -1,0 +1,42 @@
+# Render Blueprint: busiRAG API on the free plan.
+# Render dashboard → New → Blueprint → select this repository.
+services:
+  - type: web
+    name: busirag-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Secrets: Render asks for these when the Blueprint is created.
+      - key: DATABASE_URL        # Neon connection string (direct, not -pooler)
+        sync: false
+      - key: REDIS_URL           # Upstash rediss:// URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS        # your Vercel URL, e.g. https://busirag.vercel.app
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      # Demo configuration
+      - key: EMBEDDING_BACKEND
+        value: onnx
+      - key: EMBEDDING_THREADS
+        value: "1"
+      - key: RETRIEVAL_MODE
+        value: hybrid
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: DEMO_MODE
+        value: "true"
+      - key: CACHE_TTL
+        value: "2592000"
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "5"
+      - key: RATE_LIMIT_PER_DAY
+        value: "8"
+      - key: MAX_QUERY_LENGTH
+        value: "500"
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"

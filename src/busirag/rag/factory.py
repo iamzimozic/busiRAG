@@ -1,11 +1,29 @@
 from busirag.cache import Cache
 from busirag.config import Settings
-from busirag.embeddings import EmbeddingProvider, LocalEmbeddingProvider
+from busirag.embeddings import EmbeddingProvider
 from busirag.generation.factory import create_llm_provider, llm_identity
 from busirag.generation.service import GenerationService
 from busirag.rag.service import RAGService
-from busirag.reranking import LocalReranker
 from busirag.versioning import CHUNKING_VERSION, EMBEDDING_MODEL
+
+
+def create_embedding_provider(settings: Settings) -> EmbeddingProvider:
+    """Embedding provider for EMBEDDING_BACKEND (models load lazily)."""
+
+    if settings.embedding_backend == "onnx":
+        from busirag.embeddings.onnx import OnnxEmbeddingProvider
+
+        return OnnxEmbeddingProvider(
+            model_name=settings.embedding_model,
+            threads=settings.embedding_threads,
+        )
+
+    from busirag.embeddings.local import LocalEmbeddingProvider
+
+    return LocalEmbeddingProvider(
+        model_name=settings.embedding_model,
+        device=settings.model_device,
+    )
 
 
 def build_rag_service(
@@ -23,21 +41,19 @@ def build_rag_service(
     """
 
     if embedding_provider is None:
-        embedding_provider = LocalEmbeddingProvider(
-            model_name=settings.embedding_model,
-            device=settings.model_device,
-        )
+        embedding_provider = create_embedding_provider(settings)
 
-    # Only hybrid_rerank uses the cross-encoder; skipping it saves
-    # memory and startup time on small CPU hosts.
-    reranker = (
-        LocalReranker(
+    # Only hybrid_rerank uses the cross-encoder (and PyTorch); skipping
+    # it saves memory and startup time on small CPU hosts.
+    reranker = None
+
+    if settings.retrieval_mode == "hybrid_rerank":
+        from busirag.reranking.local import LocalReranker
+
+        reranker = LocalReranker(
             model_name=settings.reranker_model,
             device=settings.model_device,
         )
-        if settings.retrieval_mode == "hybrid_rerank"
-        else None
-    )
 
     return RAGService(
         embedding_provider=embedding_provider,

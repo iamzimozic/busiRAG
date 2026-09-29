@@ -42,9 +42,8 @@ from busirag.api.schemas import (
 from busirag.auth.jwt import create_access_token, decode_access_token
 from busirag.auth.passwords import hash_password, verify_password
 from busirag.db.models import Document, Tenant, User
-from busirag.embeddings.local import LocalEmbeddingProvider
 from busirag.generation.response import RAGResponse
-from busirag.rag.factory import build_rag_service
+from busirag.rag.factory import build_rag_service, create_embedding_provider
 from busirag.rag.service import RAGService
 from busirag.config.validation import validate_embedding_configuration
 from busirag.errors import (
@@ -55,7 +54,6 @@ from busirag.errors import (
     RateLimitExceededError,
     RetrievalError,
 )
-from busirag.ingestion import ingest_document
 
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
@@ -67,8 +65,7 @@ def initialize_app_state(app: FastAPI) -> None:
     Load settings, models and services into app.state.
 
     Called by the lifespan, and directly by hosts that mount this app
-    inside another ASGI app (mounted apps do not run their lifespan),
-    such as the Hugging Face ZeroGPU entry point.
+    inside another ASGI app (mounted apps do not run their lifespan).
     """
 
     settings = Settings()
@@ -86,10 +83,7 @@ def initialize_app_state(app: FastAPI) -> None:
 
     app.state.rate_limiter = rate_limiter
 
-    embedding_provider = LocalEmbeddingProvider(
-        model_name=settings.embedding_model,
-        device=settings.model_device,
-    )
+    embedding_provider = create_embedding_provider(settings)
 
     app.state.embedding_provider = embedding_provider
 
@@ -320,6 +314,10 @@ def upload_document(
     with destination.open("wb") as output:
         while chunk := file.file.read(1024 * 1024):
             output.write(chunk)
+
+    # Imported here: document parsers are only needed for uploads, and
+    # skipping them keeps the read-only demo's memory footprint small.
+    from busirag.ingestion import ingest_document
 
     try:
         chunk_count = ingest_document(

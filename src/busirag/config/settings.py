@@ -28,11 +28,18 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen2.5:7b"
 
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+    # How the embedding model runs: sentence_transformers (PyTorch) or
+    # onnx (ONNX Runtime, no PyTorch; same vectors, far less memory).
+    embedding_backend: Literal["sentence_transformers", "onnx"] = (
+        "sentence_transformers"
+    )
+    # ONNX Runtime threads; 0 = automatic.
+    embedding_threads: int = Field(default=0, ge=0)
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
 
     # Device for local models ("cpu", "cuda"); unset = automatic.
     # Set to "cpu" on hosts that report a GPU the app cannot use
-    # directly (e.g. Hugging Face ZeroGPU).
+    # directly.
     model_device: str | None = None
 
     # dense | sparse | hybrid | hybrid_rerank (see busirag.retrieval.modes)

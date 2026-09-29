@@ -7,7 +7,7 @@ from dataclasses import replace
 
 from busirag.embeddings import EmbeddingProvider
 from busirag.generation.service import GenerationService
-from busirag.reranking import LocalReranker
+from busirag.reranking import Reranker
 from busirag.retrieval.reranked import retrieve_reranked_chunks
 from busirag.retrieval.modes import (
     DEFAULT_RETRIEVAL_MODE,
@@ -40,7 +40,7 @@ class RAGService:
     def __init__(
         self,
         embedding_provider: EmbeddingProvider,
-        reranker: LocalReranker,
+        reranker: Reranker | None,
         generation_service: GenerationService,
         cache: Cache | None = None,
         chunking_version: str | None = None,
