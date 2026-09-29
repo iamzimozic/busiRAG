@@ -1,6 +1,98 @@
 # Deploying the BusiRAG demo
 
-This guide deploys a public, read-only demo: the FastAPI backend with PostgreSQL + pgvector and Redis on **Railway**, and the React frontend as a static site.
+Two ways to run a public, read-only demo:
+
+- **[Free deployment](#free-deployment-hugging-face-spaces--neon--upstash)**: Hugging Face Spaces + Neon + Upstash + the Gemini free tier. No credit card; best for a portfolio demo.
+- **[Railway](#paid-deployment-railway)**: always-on, more control, usage-based billing.
+
+Both use pre-ingested documents. At query time busiRAG only reads chunk text and embeddings from PostgreSQL and never opens the original files, so **no file or object storage is needed**; the demo answers only from the documents you ingested (the whole 12-report corpus is ~33 MB in PostgreSQL).
+
+## Free deployment (Hugging Face Spaces + Neon + Upstash)
+
+| Piece | Free service |
+|---|---|
+| API + frontend (one app, one URL) | [Hugging Face Spaces](https://huggingface.co/spaces), Gradio SDK (runs our FastAPI app), free CPU hardware |
+| PostgreSQL + pgvector | [Neon](https://neon.tech) free plan |
+| Redis (answer cache, rate limits) | [Upstash](https://upstash.com) free plan |
+| Answer generation | Gemini API free tier ([Google AI Studio](https://aistudio.google.com) key) |
+| Document ingestion | your own machine, once |
+
+Free-tier limits change; check each provider's current limits. The one that matters most is the **Gemini free quota** (when tested for this project, `gemini-2.5-flash` allowed 20 requests per day). The demo is built around it:
+
+- answers are cached in Redis for 30 days, and `scripts/warm_cache.py` pre-answers the demo questions, so the suggested questions never use quota;
+- `RATE_LIMIT_PER_DAY` caps **new** (uncached) questions only; cached answers keep working after the cap is reached;
+- if Upstash is unavailable or over its limits, queries still work (the cache degrades to a miss and rate limiting fails open).
+
+### 1. Create the accounts and databases
+
+1. **Neon**: create a project and copy the **direct** connection string (host without `-pooler`; the pooled endpoint does not work well with psycopg's prepared statements). It looks like `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`; busiRAG switches it to the psycopg driver automatically.
+2. **Upstash**: create a Redis database and copy its `rediss://default:…@….upstash.io:6379` URL.
+3. **Google AI Studio**: create a Gemini API key.
+4. **Hugging Face**: create an account.
+
+### 2. Load the documents from your machine
+
+Ingestion (PDF parsing and embeddings) runs locally, using your CPU/GPU, straight into Neon. Place the reports as `data/raw/<company>/<year>/<file>.pdf|docx`, then:
+
+```bash
+source ~/.venvs/ai/bin/activate          # or your environment
+export DATABASE_URL='postgresql://…neon…?sslmode=require'
+export REDIS_URL='rediss://default:…@….upstash.io:6379'
+export DEMO_PASSWORD="$(python -c 'import secrets; print(secrets.token_urlsafe(12))')"
+export RETRIEVAL_MODE=hybrid CACHE_TTL=2592000
+
+alembic upgrade head                     # creates the schema and the vector extension
+python scripts/setup_demo.py             # demo user + ingest data/raw
+python scripts/warm_cache.py             # pre-answer docs/demo_questions.txt
+echo "$DEMO_PASSWORD"                    # needed for the Space variables
+```
+
+Exported variables override your local `.env`. `warm_cache.py` must run with the same `LLM_PROVIDER`, `GEMINI_MODEL`, `RETRIEVAL_MODE`, `TOP_K`, `CANDIDATE_K` and `EMBEDDING_MODEL` as the Space, because they are all part of the cache key. It uses one Gemini request per uncached question (10 in the default list) and skips questions already cached, so it is safe to re-run on another day if it hits the quota.
+
+To add documents later, drop them into `data/raw/` and re-run `setup_demo.py` (and `warm_cache.py` for new demo questions). The Space does not need a rebuild.
+
+### 3. Create the Space
+
+Docker Spaces are not available on the free plan, so the Space uses the **Gradio SDK**: Hugging Face installs `requirements.txt` and runs `python app.py`, and [`deploy/huggingface-gradio/app.py`](deploy/huggingface-gradio/app.py) starts the busiRAG API (serving the prebuilt frontend) instead of a Gradio UI.
+
+1. **Build the frontend** on your machine, with the demo login baked in (same terminal as step 2, so `$DEMO_PASSWORD` is set):
+
+   ```bash
+   cd frontend
+   VITE_API_BASE_URL= VITE_DEMO_MODE=true \
+   VITE_DEMO_EMAIL=demo@busirag.app VITE_DEMO_PASSWORD="$DEMO_PASSWORD" \
+   npm run build
+   cd ..
+   ```
+
+   The empty `VITE_API_BASE_URL` makes the page call the API on its own origin.
+2. On Hugging Face, **New Space** → SDK **Gradio** → blank template → free CPU hardware → public. Keep the `README.md` Hugging Face generates (its header selects the SDK and `app_file: app.py`).
+3. Upload to the Space repository root:
+   - `deploy/huggingface-gradio/app.py`
+   - `deploy/huggingface-gradio/requirements.txt` (installs busiRAG from GitHub; it points at the `portfolio-upgrade` branch, so change `@portfolio-upgrade` to `@main` once merged)
+   - the **contents** of `frontend/dist/` into a folder named `dist/` (so the Space has `dist/index.html` and `dist/assets/…`)
+4. In **Settings → Variables and secrets**, add the secrets `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET_KEY` and `GEMINI_API_KEY`, and the variables `RATE_LIMIT_PER_MINUTE=5` and `RATE_LIMIT_PER_DAY` (e.g. `8`). `app.py` already sets `DEMO_MODE=true`, `RETRIEVAL_MODE=hybrid`, `CACHE_TTL=2592000` and trusts the proxy's client-IP header.
+5. The Space installs the requirements (several minutes: PyTorch CPU wheels) and starts at `https://<user>-<space>.hf.space`. The embedding model downloads on first start.
+
+Migrations are not run by the Space; you already ran `alembic upgrade head` in step 2. Run it again from your machine after pulling changes that add migrations.
+
+If your account can use Docker Spaces, [`deploy/huggingface/`](deploy/huggingface/) is a Docker alternative that clones the repository and builds the frontend itself (set `VITE_DEMO_EMAIL`, `VITE_DEMO_PASSWORD`, `CACHE_TTL`, `FORWARDED_ALLOW_IPS=*` and `GIT_REF` as Space variables).
+
+### 4. Verify
+
+- Open the Space and click **Try the demo**.
+- Click a suggested question: the diagnostics panel shows **Cache hit** and an instant answer.
+- Ask a new question from [docs/DEMO_QUESTIONS.md](docs/DEMO_QUESTIONS.md): it goes to Gemini and is cached afterwards.
+
+### Free-tier behaviour to expect
+
+- **Cold starts**: free Spaces sleep after a period without visitors and Neon suspends idle compute; the first request after a pause takes noticeably longer while both wake up.
+- **Updating code**: push to GitHub, then **Settings → Factory rebuild** on the Space (it reinstalls busiRAG from the branch in `requirements.txt`). Frontend changes need a new `npm run build` and re-uploading `dist/`.
+- **Read-only**: uploads, deletes and registration are disabled (`DEMO_MODE`), which is also why no file storage is needed.
+
+## Paid deployment (Railway)
+
+The rest of this guide deploys the FastAPI backend with PostgreSQL + pgvector and Redis on **Railway**, and the React frontend as a static site.
 
 ## Choosing a host
 
@@ -89,7 +181,7 @@ Set these variables on the API service. Railway's reference syntax (`${{Service.
 | `RETRIEVAL_MODE` | `hybrid` (see the tradeoff above) |
 | `DEMO_MODE` | `true` (disables registration and document upload/delete) |
 | `RATE_LIMIT_PER_MINUTE` | `5` (per client IP) |
-| `RATE_LIMIT_PER_DAY` | e.g. `200` (global cap on queries; keep it under your LLM quota) |
+| `RATE_LIMIT_PER_DAY` | e.g. `200` (global daily cap on new, uncached questions, i.e. LLM calls; keep it under your LLM quota) |
 | `MAX_QUERY_LENGTH` | `500` |
 | `CORS_ORIGINS` | your frontend URL, e.g. `https://busirag-demo.pages.dev` (comma-separated for several) |
 | `FORWARDED_ALLOW_IPS` | `*`, so uvicorn trusts Railway's proxy headers and rate limits see real client IPs |

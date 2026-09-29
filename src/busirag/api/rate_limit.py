@@ -44,37 +44,62 @@ class RateLimiter:
         return self.per_minute > 0 or self.per_day > 0
 
     def check(self, client_id: str) -> None:
-        if not self.enabled:
-            return
+        """Apply both the per-client and the global daily limit."""
+
+        self._check_windows(
+            self._client_windows(client_id) + self._daily_windows()
+        )
+
+    def check_client(self, client_id: str) -> None:
+        """Per-client burst limit; applied to every query."""
+
+        self._check_windows(self._client_windows(client_id))
+
+    def check_daily_budget(self) -> None:
+        """
+        Global daily cap. RAGService applies it only on cache misses,
+        so it limits LLM calls while cached answers keep working.
+        """
+
+        self._check_windows(self._daily_windows())
+
+    def _client_windows(self, client_id: str) -> list[tuple]:
+        if self.per_minute <= 0:
+            return []
 
         now = self.clock()
-        minute = int(now // 60)
-        day = int(now // 86400)
 
-        windows = []
-
-        if self.per_minute > 0:
-            windows.append(
-                (
-                    f"{self.prefix}:minute:{minute}:{client_id}",
-                    self.per_minute,
-                    60,
-                    60 - int(now % 60),
-                    "Too many questions. Please wait a minute and try again.",
-                )
+        return [
+            (
+                f"{self.prefix}:minute:{int(now // 60)}:{client_id}",
+                self.per_minute,
+                60,
+                60 - int(now % 60),
+                "Too many questions. Please wait a minute and try again.",
             )
+        ]
 
-        if self.per_day > 0:
-            windows.append(
-                (
-                    f"{self.prefix}:day:{day}",
-                    self.per_day,
-                    86400,
-                    86400 - int(now % 86400),
-                    "The demo's daily question limit has been reached. "
-                    "Please try again tomorrow.",
-                )
+    def _daily_windows(self) -> list[tuple]:
+        if self.per_day <= 0:
+            return []
+
+        now = self.clock()
+
+        return [
+            (
+                f"{self.prefix}:day:{int(now // 86400)}",
+                self.per_day,
+                86400,
+                86400 - int(now % 86400),
+                "The demo's daily limit for new questions has been "
+                "reached. Suggested questions still work; please try "
+                "other questions tomorrow.",
             )
+        ]
+
+    def _check_windows(self, windows: list[tuple]) -> None:
+        if not windows:
+            return
 
         try:
             pipeline = self.store.pipeline()

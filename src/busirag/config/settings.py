@@ -78,6 +78,10 @@ class ApiSettings(BaseSettings):
     # Comma-separated list of allowed browser origins.
     cors_origins: str = "http://localhost:5173"
 
+    # Directory with the built frontend (frontend/dist). When set, the
+    # API also serves the UI at "/" (single-origin deployment).
+    frontend_dist: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

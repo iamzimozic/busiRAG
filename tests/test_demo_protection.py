@@ -225,3 +225,63 @@ def test_cors_origins_are_parsed_from_a_comma_separated_list():
         "https://demo.example.com",
         "http://localhost:5173",
     ]
+
+
+def test_client_and_daily_checks_are_independent():
+    store = FakeStore()
+    limiter = RateLimiter(store, per_minute=1, per_day=1, clock=lambda: 90.0)
+
+    limiter.check_client("a")
+    limiter.check_daily_budget()
+
+    with pytest.raises(RateLimitExceededError, match="Too many"):
+        limiter.check_client("a")
+
+    with pytest.raises(RateLimitExceededError, match="daily"):
+        limiter.check_daily_budget()
+
+    # Another client is not affected by the first client's minute window.
+    limiter.check_client("b")
+
+
+def test_query_endpoint_does_not_apply_the_daily_cap(client):
+    # The daily cap is enforced by RAGService on cache misses, so the
+    # endpoint only applies the per-client limit.
+    limiter = RateLimiter(FakeStore(), per_day=1)
+    app.dependency_overrides[get_rate_limiter] = lambda: limiter
+
+    headers = get_test_auth_headers()
+
+    for _ in range(3):
+        response = client.post("/query", json={"query": "q"}, headers=headers)
+        assert response.status_code == 200
+
+
+def test_mount_frontend_serves_spa_without_shadowing_api(tmp_path):
+    from fastapi import FastAPI
+
+    from busirag.api.main import mount_frontend
+
+    (tmp_path / "index.html").write_text("<html>busirag ui</html>")
+
+    frontend_app = FastAPI()
+
+    @frontend_app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    assert mount_frontend(frontend_app, str(tmp_path)) is True
+
+    test_client = TestClient(frontend_app)
+
+    assert "busirag ui" in test_client.get("/").text
+    assert test_client.get("/health").json() == {"status": "ok"}
+
+
+def test_mount_frontend_skips_missing_directory(tmp_path):
+    from fastapi import FastAPI
+
+    from busirag.api.main import mount_frontend
+
+    assert mount_frontend(FastAPI(), "") is False
+    assert mount_frontend(FastAPI(), str(tmp_path / "missing")) is False

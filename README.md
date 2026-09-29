@@ -522,6 +522,8 @@ Results are written to `data/evaluation/results/answer_eval.json` and `answer_ev
 
 ## Deployment
 
+**Free option:** the demo runs at no cost on Hugging Face Spaces + Neon (PostgreSQL/pgvector) + Upstash (Redis) + the Gemini free tier, using documents ingested ahead of time; no file storage needed. See [Free deployment](DEPLOYMENT.md#free-deployment-hugging-face-spaces--neon--upstash).
+
 [DEPLOYMENT.md](DEPLOYMENT.md) walks through deploying a public, read-only demo on Railway (API + PostgreSQL/pgvector + Redis) with the frontend on a static host. It covers the measured reranker latency/quality tradeoff for CPU hosting, demo-corpus setup (`scripts/setup_demo.py`) and public-demo protection (`RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_PER_DAY`, `MAX_QUERY_LENGTH`, `DEMO_MODE`). Suggested demo questions, with their measured retrieval ranks, are in [docs/DEMO_QUESTIONS.md](docs/DEMO_QUESTIONS.md).
 
 ## CI/CD

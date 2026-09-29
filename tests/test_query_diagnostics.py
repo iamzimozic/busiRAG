@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from fastapi.testclient import TestClient
 
 from busirag.api.dependencies import get_rag_service
@@ -232,3 +233,112 @@ def test_query_endpoint_returns_diagnostics():
         (chunk["citation_id"], chunk["cited"])
         for chunk in diagnostics["retrieved"]
     ] == [("S1", False), ("S2", True)]
+
+
+class FailingCache:
+    def get(self, key):
+        raise ConnectionError("redis over quota")
+
+    def set(self, key, value, ttl):
+        raise ConnectionError("redis over quota")
+
+
+def _reranked_service(monkeypatch, cache, budget=None):
+    import busirag.rag.service as rag_service_module
+
+    monkeypatch.setattr(
+        rag_service_module,
+        "retrieve_reranked_chunks",
+        lambda **kwargs: [
+            RerankedRetrievalResult(
+                chunk_id=1, score=0.9, retrieval_score=0.03, **COMMON
+            )
+        ],
+    )
+
+    return RAGService(
+        embedding_provider=object(),
+        reranker=object(),
+        generation_service=GenerationService(MockLLMProvider()),
+        cache=cache,
+        generation_budget=budget,
+    )
+
+
+def test_cache_failures_degrade_to_a_miss(monkeypatch):
+    service = _reranked_service(monkeypatch, FailingCache())
+
+    result = service.query(None, "q", tenant_id=1)
+
+    assert result.answer == "MOCK ANSWER"
+    assert result.diagnostics.cache_hit is False
+
+
+class ExhaustedBudget:
+    def __init__(self):
+        self.checks = 0
+
+    def check_daily_budget(self):
+        from busirag.errors import RateLimitExceededError
+
+        self.checks += 1
+        raise RateLimitExceededError("daily cap", retry_after=60)
+
+
+def test_daily_budget_applies_only_to_cache_misses(monkeypatch):
+    from busirag.errors import RateLimitExceededError
+
+    cache = DictCache()
+    budget = ExhaustedBudget()
+
+    # Warm the cache without a budget, then exhaust the budget.
+    _reranked_service(monkeypatch, cache).query(None, "cached q", tenant_id=1)
+    service = _reranked_service(monkeypatch, cache, budget)
+
+    hit = service.query(None, "cached q", tenant_id=1)
+
+    assert hit.diagnostics.cache_hit is True
+    assert budget.checks == 0
+
+    with pytest.raises(RateLimitExceededError):
+        service.query(None, "new q", tenant_id=1)
+
+    assert budget.checks == 1
+
+
+def test_build_rag_service_cache_key_matches_api_configuration(monkeypatch):
+    from busirag.cache.keys import build_query_cache_key
+    from busirag.config import Settings
+    from busirag.rag.factory import build_rag_service
+
+    for name in ("LLM_PROVIDER", "RETRIEVAL_MODE", "TOP_K", "CANDIDATE_K"):
+        monkeypatch.delenv(name, raising=False)
+
+    settings = Settings(
+        _env_file=None,
+        database_url="postgresql+psycopg://u:p@localhost/db",
+        jwt_secret_key="secret",
+        llm_provider="ollama",
+        retrieval_mode="hybrid",
+        top_k=8,
+    )
+
+    service = build_rag_service(
+        settings=settings,
+        cache=None,
+        embedding_provider=object(),
+    )
+
+    assert service.reranker is None
+    assert service.cache_key("  What was   revenue? ", 7) == (
+        build_query_cache_key(
+            query="What was revenue?",
+            tenant_id=7,
+            chunking_version="v3-table-context",
+            embedding_model="BAAI/bge-small-en-v1.5",
+            candidate_k=50,
+            top_k=8,
+            retrieval_mode="hybrid",
+            generation_model="ollama:qwen2.5:7b",
+        )
+    )
