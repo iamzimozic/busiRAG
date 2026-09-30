@@ -87,3 +87,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t busirag-api .
+
+      - name: Build Render (PyTorch-free) image
+        run: |
+          docker build -f Dockerfile.render -t busirag-api-render .

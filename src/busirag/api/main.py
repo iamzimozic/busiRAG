@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, Form, Request, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPAuthorizationCredentials
 
 from sqlalchemy import select
@@ -41,12 +42,9 @@ from busirag.api.schemas import (
 from busirag.auth.jwt import create_access_token, decode_access_token
 from busirag.auth.passwords import hash_password, verify_password
 from busirag.db.models import Document, Tenant, User
-from busirag.embeddings.local import LocalEmbeddingProvider
-from busirag.generation.factory import create_llm_provider, llm_identity
 from busirag.generation.response import RAGResponse
-from busirag.generation.service import GenerationService
+from busirag.rag.factory import build_rag_service, create_embedding_provider
 from busirag.rag.service import RAGService
-from busirag.reranking.local import LocalReranker
 from busirag.config.validation import validate_embedding_configuration
 from busirag.errors import (
     BusiragError,
@@ -56,16 +54,20 @@ from busirag.errors import (
     RateLimitExceededError,
     RetrievalError,
 )
-from busirag.ingestion import ingest_document
-from busirag.versioning import CHUNKING_VERSION, EMBEDDING_MODEL
 
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 import logging
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def initialize_app_state(app: FastAPI) -> None:
+    """
+    Load settings, models and services into app.state.
+
+    Called by the lifespan, and directly by hosts that mount this app
+    inside another ASGI app (mounted apps do not run their lifespan).
+    """
+
     settings = Settings()
     validate_embedding_configuration(settings.embedding_model)
 
@@ -73,43 +75,29 @@ async def lifespan(app: FastAPI):
 
     cache = RedisCache(settings.redis_url)
 
-    app.state.rate_limiter = RateLimiter(
+    rate_limiter = RateLimiter(
         cache.client,
         per_minute=settings.rate_limit_per_minute,
         per_day=settings.rate_limit_per_day,
     )
 
-    embedding_provider = LocalEmbeddingProvider(
-        model_name=settings.embedding_model,
-    )
+    app.state.rate_limiter = rate_limiter
+
+    embedding_provider = create_embedding_provider(settings)
 
     app.state.embedding_provider = embedding_provider
 
-    # Only hybrid_rerank uses the cross-encoder; skipping it saves
-    # memory and startup time on small CPU hosts.
-    reranker = (
-        LocalReranker(model_name=settings.reranker_model)
-        if settings.retrieval_mode == "hybrid_rerank"
-        else None
-    )
-
-    llm = create_llm_provider(settings)
-
-    generation_service = GenerationService(llm)
-
-    app.state.rag_service = RAGService(
-        embedding_provider=embedding_provider,
-        reranker=reranker,
-        generation_service=generation_service,
+    app.state.rag_service = build_rag_service(
+        settings=settings,
         cache=cache,
-        chunking_version=CHUNKING_VERSION,
-        embedding_model=EMBEDDING_MODEL,
-        candidate_k=settings.candidate_k,
-        top_k=settings.top_k,
-        cache_ttl=settings.cache_ttl,
-        retrieval_mode=settings.retrieval_mode,
-        generation_model=llm_identity(settings),
+        embedding_provider=embedding_provider,
+        generation_budget=rate_limiter,
     )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_app_state(app)
 
     yield
 
@@ -327,6 +315,10 @@ def upload_document(
         while chunk := file.file.read(1024 * 1024):
             output.write(chunk)
 
+    # Imported here: document parsers are only needed for uploads, and
+    # skipping them keeps the read-only demo's memory footprint small.
+    from busirag.ingestion import ingest_document
+
     try:
         chunk_count = ingest_document(
             path=destination,
@@ -505,7 +497,8 @@ def query(
             if http_request.client is not None
             else "unknown"
         )
-        rate_limiter.check(client_host)
+        # The daily cap is applied by RAGService on cache misses only.
+        rate_limiter.check_client(client_host)
 
     result = rag_service.query(
         session=session,
@@ -572,3 +565,25 @@ def build_diagnostics_response(
             for item in result.retrieved
         ],
     )
+
+
+def mount_frontend(target: FastAPI, directory: str) -> bool:
+    """
+    Serve a built frontend at "/". Mounted after every API route, so
+    routes such as /query and /health still take precedence.
+    """
+
+    if not directory or not Path(directory).is_dir():
+        return False
+
+    target.mount(
+        "/",
+        StaticFiles(directory=directory, html=True),
+        name="frontend",
+    )
+
+    return True
+
+
+# Must stay at the end of the module, after all routes are registered.
+mount_frontend(app, ApiSettings().frontend_dist)

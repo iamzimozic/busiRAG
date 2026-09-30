@@ -62,3 +62,37 @@ def test_database_url_uses_psycopg_driver(url, expected):
     from busirag.db.session import normalize_database_url
 
     assert normalize_database_url(url) == expected
+
+
+def test_model_device_is_passed_to_local_models(monkeypatch):
+    import busirag.embeddings.local as embeddings_module
+    import busirag.reranking.local as reranking_module
+    from busirag.rag.factory import build_rag_service
+
+    created = []
+
+    class FakeModel:
+        def __init__(self, model_name, device=None):
+            created.append((model_name, device))
+
+    monkeypatch.setattr(embeddings_module, "SentenceTransformer", FakeModel)
+    monkeypatch.setattr(reranking_module, "CrossEncoder", FakeModel)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("RETRIEVAL_MODE", raising=False)
+
+    build_rag_service(
+        settings=_settings(
+            model_device="cpu",
+            retrieval_mode="hybrid_rerank",
+        ),
+        cache=None,
+    )
+
+    assert created == [
+        ("BAAI/bge-small-en-v1.5", "cpu"),
+        ("BAAI/bge-reranker-v2-m3", "cpu"),
+    ]
+
+
+def test_model_device_defaults_to_automatic():
+    assert _settings().model_device is None

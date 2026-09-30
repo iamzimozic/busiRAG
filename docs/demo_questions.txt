@@ -1,0 +1,15 @@
+# Questions pre-answered by scripts/warm_cache.py (one per line).
+# The first three must match SUGGESTED_QUESTIONS in frontend/src/App.tsx
+# exactly, so the UI's suggestions are served from the cache.
+# Each uncached question uses one LLM call; keep the list under the
+# provider's daily free quota.
+What was Apple's net income in 2023?
+How did Apple's total net sales change from 2022 to 2023?
+What is Microsoft's relationship with OpenAI?
+What was JPMorgan Chase's CET1 capital ratio at the end of 2024?
+What was NVIDIA's Data Center revenue in fiscal 2025?
+How many full-time employees did Apple and Microsoft each have in 2025?
+Compare Apple's fiscal 2025 net income with NVIDIA's fiscal 2026 net income.
+How have U.S. export controls affected NVIDIA's ability to sell to China?
+How does JPMorgan Chase describe operational risk?
+What was Tesla's total revenue in 2024?

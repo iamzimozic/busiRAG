@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
 
+import logging
 import uuid
 import time
 from dataclasses import replace
 
 from busirag.embeddings import EmbeddingProvider
 from busirag.generation.service import GenerationService
-from busirag.reranking import LocalReranker
+from busirag.reranking import Reranker
 from busirag.retrieval.reranked import retrieve_reranked_chunks
 from busirag.retrieval.modes import (
     DEFAULT_RETRIEVAL_MODE,
@@ -32,11 +33,14 @@ from busirag.observability.metrics import (
     record_query_error,
 )
 
+logger = logging.getLogger(__name__)
+
+
 class RAGService:
     def __init__(
         self,
         embedding_provider: EmbeddingProvider,
-        reranker: LocalReranker,
+        reranker: Reranker | None,
         generation_service: GenerationService,
         cache: Cache | None = None,
         chunking_version: str | None = None,
@@ -46,6 +50,7 @@ class RAGService:
         cache_ttl: int = 3600,
         retrieval_mode: RetrievalMode = DEFAULT_RETRIEVAL_MODE,
         generation_model: str | None = None,
+        generation_budget=None,
     ):
         self.embedding_provider = embedding_provider
         self.reranker = reranker
@@ -58,6 +63,43 @@ class RAGService:
         self.cache_ttl = cache_ttl
         self.retrieval_mode = retrieval_mode
         self.generation_model = generation_model
+        # Optional object with check_daily_budget() (see
+        # busirag.api.rate_limit.RateLimiter); checked on cache misses
+        # only, so cached answers are served even when the cap is hit.
+        self.generation_budget = generation_budget
+
+    def cache_key(self, query: str, tenant_id: int) -> str:
+        """The cache key for a query under this service's configuration."""
+
+        return build_query_cache_key(
+            query=query,
+            tenant_id=tenant_id,
+            chunking_version=self.chunking_version,
+            embedding_model=self.embedding_model,
+            candidate_k=self.candidate_k,
+            top_k=self.top_k,
+            retrieval_mode=self.retrieval_mode,
+            generation_model=self.generation_model,
+        )
+
+    def _cache_get(self, key: str) -> str | None:
+        # A cache outage (e.g. a free Redis tier over quota) degrades
+        # to a cache miss instead of failing the query.
+        try:
+            return self.cache.get(key)
+        except Exception:
+            logger.warning("Cache read failed; continuing", exc_info=True)
+            return None
+
+    def _cache_set(self, key: str, value: str) -> None:
+        try:
+            self.cache.set(
+                key=key,
+                value=value,
+                ttl=self.cache_ttl,
+            )
+        except Exception:
+            logger.warning("Cache write failed; continuing", exc_info=True)
 
     def _diagnostics(
         self,
@@ -124,20 +166,11 @@ class RAGService:
         if request_id is None:
             request_id = str(uuid.uuid4())
 
-        cache_key = build_query_cache_key(
-            query=query,
-            tenant_id=tenant_id,
-            chunking_version=self.chunking_version,
-            embedding_model=self.embedding_model,
-            candidate_k=self.candidate_k,
-            top_k=self.top_k,
-            retrieval_mode=self.retrieval_mode,
-            generation_model=self.generation_model,
-        )
+        cache_key = self.cache_key(query, tenant_id)
 
         #cache lookup goes here
         if self.cache is not None:
-            cached_value = self.cache.get(cache_key)
+            cached_value = self._cache_get(cache_key)
 
             if cached_value is not None:
                 result = deserialize_rag_response(cached_value)
@@ -174,6 +207,10 @@ class RAGService:
                         total_ms=total_ms,
                     ),
                 )
+
+        if self.generation_budget is not None:
+            self.generation_budget.check_daily_budget()
+
         try:
             retrieval_start = time.perf_counter()
 
@@ -200,10 +237,9 @@ class RAGService:
 
             #cache store goes here
             if self.cache is not None:
-                self.cache.set(
-                    key=cache_key,
-                    value=serialize_rag_response(result),
-                    ttl=self.cache_ttl,
+                self._cache_set(
+                    cache_key,
+                    serialize_rag_response(result),
                 )
 
             total_ms = (

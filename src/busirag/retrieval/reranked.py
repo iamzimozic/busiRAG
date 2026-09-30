@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from busirag.embeddings import EmbeddingProvider
-from busirag.reranking import LocalReranker
+from busirag.reranking import Reranker
 from busirag.retrieval.hybrid import retrieve_hybrid_chunks
 
 
@@ -27,7 +27,7 @@ def retrieve_reranked_chunks(
     session: Session,
     query: str,
     embedding_provider: EmbeddingProvider,
-    reranker: LocalReranker,
+    reranker: Reranker,
     tenant_id: int,
     top_k: int = 5,
     candidate_k: int = 20,

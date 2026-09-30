@@ -1,6 +1,110 @@
 # Deploying the BusiRAG demo
 
-This guide deploys a public, read-only demo: the FastAPI backend with PostgreSQL + pgvector and Redis on **Railway**, and the React frontend as a static site.
+Two ways to run a public, read-only demo:
+
+- **[Free deployment](#free-deployment-render--vercel--neon--upstash)**: Render + Vercel + Neon + Upstash + the Gemini free tier. No credit card; best for a portfolio demo.
+- **[Railway](#paid-deployment-railway)**: always-on, more control, usage-based billing.
+
+Both use pre-ingested documents. At query time busiRAG only reads chunk text and embeddings from PostgreSQL and never opens the original files, so **no file or object storage is needed**; the demo answers only from the documents you ingested (the whole 12-report corpus is ~33 MB in PostgreSQL).
+
+## Free deployment (Render + Vercel + Neon + Upstash)
+
+| Piece | Free service |
+|---|---|
+| API | [Render](https://render.com) free web service (Docker, 512 MB RAM) |
+| Frontend | [Vercel](https://vercel.com) Hobby plan |
+| PostgreSQL + pgvector | [Neon](https://neon.tech) free plan |
+| Redis (answer cache, rate limits) | [Upstash](https://upstash.com) free plan |
+| Answer generation | Gemini API free tier ([Google AI Studio](https://aistudio.google.com) key) |
+| Document ingestion | your own machine, once |
+
+**Fitting in 512 MB.** The regular API image loads PyTorch and uses ~0.93 GB. The Render image (`Dockerfile.render`, `requirements.render.txt`) has no PyTorch: embeddings run with ONNX Runtime (`EMBEDDING_BACKEND=onnx`), the reranker is off (`RETRIEVAL_MODE=hybrid`), and document parsers load only for uploads. Measured locally, the API process uses **~365 MB** after startup. The ONNX model produces the same vectors as the sentence-transformers model used for ingestion (cosine similarity 1.0), and the hybrid benchmark gives identical per-question ranks, so the existing index and cached answers stay valid.
+
+Free-tier limits change; check each provider's current limits. The one that matters most is the **Gemini free quota** (when tested for this project, `gemini-2.5-flash` allowed 20 requests per day). The demo is built around it:
+
+- answers are cached in Redis for 30 days, and `scripts/warm_cache.py` pre-answers the demo questions, so the suggested questions never use quota;
+- `RATE_LIMIT_PER_DAY` caps **new** (uncached) questions only; cached answers keep working after the cap is reached;
+- if Upstash is unavailable or over its limits, queries still work (the cache degrades to a miss and rate limiting fails open).
+
+### 1. Create the accounts and databases
+
+1. **Neon**: create a project and copy the **direct** connection string (host without `-pooler`; the pooled endpoint does not work well with psycopg's prepared statements). It looks like `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`; busiRAG switches it to the psycopg driver automatically.
+2. **Upstash**: create a Redis database and copy its `rediss://default:…@….upstash.io:6379` URL.
+3. **Google AI Studio**: create a Gemini API key.
+4. **Render** and **Vercel**: sign up with GitHub.
+
+### 2. Load the documents from your machine
+
+Ingestion (PDF parsing and embeddings) runs locally, using your CPU/GPU, straight into Neon. Place the reports as `data/raw/<company>/<year>/<file>.pdf|docx`, then:
+
+```bash
+source ~/.venvs/ai/bin/activate          # or your environment
+export DATABASE_URL='postgresql://…neon…?sslmode=require'
+export REDIS_URL='rediss://default:…@….upstash.io:6379'
+export DEMO_PASSWORD="$(python -c 'import secrets; print(secrets.token_urlsafe(12))')"
+export RETRIEVAL_MODE=hybrid CACHE_TTL=2592000
+
+alembic upgrade head                     # creates the schema and the vector extension
+python scripts/setup_demo.py             # demo user + ingest data/raw
+python scripts/warm_cache.py             # pre-answer docs/demo_questions.txt
+echo "$DEMO_PASSWORD"                    # needed for the Vercel variables
+```
+
+Exported variables override your local `.env`. `warm_cache.py` must run with the same `LLM_PROVIDER`, `GEMINI_MODEL`, `RETRIEVAL_MODE`, `TOP_K`, `CANDIDATE_K` and `EMBEDDING_MODEL` as the Render service, because they are all part of the cache key (the embedding backend is not: ONNX and PyTorch give the same vectors). It uses one Gemini request per uncached question (10 in the default list) and skips questions already cached, so it is safe to re-run on another day if it hits the quota.
+
+To add documents later, drop them into `data/raw/` and re-run `setup_demo.py` (and `warm_cache.py` for new demo questions). Nothing needs redeploying.
+
+### 3. Deploy the API on Render
+
+[`render.yaml`](render.yaml) is a Render Blueprint describing the service (free plan, `Dockerfile.render`, health check on `/health`, demo settings).
+
+1. In Render, **New → Blueprint**, connect the GitHub repository and choose the branch to deploy.
+2. Render reads `render.yaml` and asks for the secret values:
+
+   | Variable | Value |
+   |---|---|
+   | `DATABASE_URL` | the Neon connection string |
+   | `REDIS_URL` | the Upstash URL |
+   | `GEMINI_API_KEY` | your Gemini key |
+   | `CORS_ORIGINS` | your Vercel URL (e.g. `https://busirag.vercel.app`, no trailing slash). If you do not have it yet, enter a placeholder and update it after step 4. |
+
+   `JWT_SECRET_KEY` is generated by Render; the other settings (`EMBEDDING_BACKEND=onnx`, `RETRIEVAL_MODE=hybrid`, `DEMO_MODE=true`, rate limits, 30-day cache) come from `render.yaml`.
+3. Apply. The first build takes a few minutes; the service starts at `https://busirag-api.onrender.com` (or similar). Check `https://<service>.onrender.com/health` returns `{"status":"ok"}`. Migrations run at startup and are a no-op once applied.
+
+### 4. Deploy the frontend on Vercel
+
+The repository has a root [`vercel.json`](vercel.json) that installs and builds from `frontend/` (and `frontend/vercel.json` if you set the Root Directory to `frontend`), so the build settings need no changes.
+
+1. In Vercel, **Add New → Project** and import the repository. Leave the Root Directory as it is.
+2. Add **Environment Variables**:
+
+   | Name | Value |
+   |---|---|
+   | `VITE_API_BASE_URL` | `https://<service>.onrender.com` |
+   | `VITE_DEMO_MODE` | `true` |
+   | `VITE_DEMO_EMAIL` | `demo@busirag.app` |
+   | `VITE_DEMO_PASSWORD` | the demo password |
+
+3. Deploy. If the code is not on `main` yet, set the production branch to your branch under **Settings → Git** and redeploy. `VITE_*` variables are baked in at build time, so redeploy after changing them.
+4. Put the Vercel URL into `CORS_ORIGINS` on Render (Environment tab) if you used a placeholder; Render restarts the service.
+
+### 5. Verify
+
+- Open the Vercel URL and click **Try the demo**.
+- Click a suggested question: the diagnostics panel shows **Cache hit** and an instant answer.
+- Ask a new question from [docs/DEMO_QUESTIONS.md](docs/DEMO_QUESTIONS.md): it goes to Gemini and is cached afterwards.
+- A "network error" in the UI usually means `CORS_ORIGINS` on Render does not exactly match the Vercel URL, or the Render service is still waking up.
+
+### Free-tier behaviour to expect
+
+- **Cold starts**: Render's free services sleep after about 15 minutes without traffic, and Neon suspends idle compute; the first request after a pause can take 30–60 seconds while both wake up.
+- **CPU**: the free instance has a small CPU share, so embedding a new question is slower than locally; cached questions are unaffected.
+- **Updating code**: Render and Vercel redeploy automatically on push to the connected branch.
+- **Read-only**: uploads, deletes and registration are disabled (`DEMO_MODE`), which is also why no file storage is needed.
+
+## Paid deployment (Railway)
+
+The rest of this guide deploys the FastAPI backend with PostgreSQL + pgvector and Redis on **Railway**, and the React frontend as a static site.
 
 ## Choosing a host
 
@@ -89,7 +193,7 @@ Set these variables on the API service. Railway's reference syntax (`${{Service.
 | `RETRIEVAL_MODE` | `hybrid` (see the tradeoff above) |
 | `DEMO_MODE` | `true` (disables registration and document upload/delete) |
 | `RATE_LIMIT_PER_MINUTE` | `5` (per client IP) |
-| `RATE_LIMIT_PER_DAY` | e.g. `200` (global cap on queries; keep it under your LLM quota) |
+| `RATE_LIMIT_PER_DAY` | e.g. `200` (global daily cap on new, uncached questions, i.e. LLM calls; keep it under your LLM quota) |
 | `MAX_QUERY_LENGTH` | `500` |
 | `CORS_ORIGINS` | your frontend URL, e.g. `https://busirag-demo.pages.dev` (comma-separated for several) |
 | `FORWARDED_ALLOW_IPS` | `*`, so uvicorn trusts Railway's proxy headers and rate limits see real client IPs |
