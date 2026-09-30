@@ -10,7 +10,7 @@
 > _Demo recording coming soon._
 
 <!-- LIVE DEMO: replace "coming soon" with the deployed frontend URL. -->
-**Live demo:** _coming soon_ · **Deployment guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
+**Live demo:** [Link](https://busi-rhhsvy1ke-iamzimozic.vercel.app/) · **Deployment guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## Measured results
 
