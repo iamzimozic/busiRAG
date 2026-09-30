@@ -8,6 +8,7 @@
   replace the line below with:  ![busiRAG demo](docs/demo.gif)
 -->
 > _Demo recording coming soon._
+<img width="1913" height="889" alt="Screenshot 2026-09-30 225149" src="https://github.com/user-attachments/assets/6a064390-7246-4377-a0cd-3a8969c99538" />
 
 <!-- LIVE DEMO: replace "coming soon" with the deployed frontend URL. -->
 **Live demo:** [Link](https://busi-rag.vercel.app) · **Deployment guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
